@@ -52,7 +52,7 @@ export default function LoginPage() {
         {/* Card */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl">
           <h2 className="text-xl font-semibold text-white mb-6 text-center">تسجيل الدخول</h2>
-          
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Username */}
             <div>
@@ -107,7 +107,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-gray-600 text-sm mt-6">
-            بيانات الدخول الافتراضية: admin / admin123
+            التوب الايام
           </p>
         </div>
       </div>
