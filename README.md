@@ -1,146 +1,75 @@
-# ايام كناوية — تطبيق الأخبار
+# Ayam Knawyeh (أيام كناوية)
 
-تطبيق إخباري احترافي متكامل يشمل:
-- **backend/** — واجهة برمجية (Node.js + Express + MongoDB)
-- **admin/** — لوحة إدارة ويب (Next.js 14، عربي RTL)
-- **mobile/** — تطبيق جوال (React Native + Expo، Android & iOS)
+A comprehensive local news and community platform designed for high performance, ease of use, and rich media delivery. The project is built as a modern full-stack monorepo, featuring a native mobile app, a secure admin dashboard, and a robust backend.
 
----
+## 🏗️ Architecture Overview
 
-## 🚀 التشغيل السريع
+This repository is structured as a monorepo containing three distinct applications:
 
-### 1. الخادم الخلفي (Backend)
+1. **`mobile/`** - **React Native (Expo)**
+   - The user-facing mobile application available for iOS and Android.
+   - Features a custom dynamic UI, rich HTML article rendering, embedded video players, and real-time push notifications.
+   - Fully compliant with Apple App Store & Google Play UGC moderation guidelines.
 
-**المتطلبات:** Node.js 18+، MongoDB (اخبار البلد أو Atlas)
+2. **`admin/`** - **Next.js (React)**
+   - A secure, web-based Admin Dashboard used by journalists and moderators.
+   - Features a rich-text editor (TipTap), image uploads, and real-time news management.
+   - Styled with TailwindCSS for a premium, responsive desktop experience.
 
+3. **`backend/`** - **Node.js (Express) & MongoDB**
+   - The core REST API serving both the mobile app and the admin dashboard.
+   - Built with Express.js, featuring JWT authentication, file uploads, and Firebase Cloud Messaging (FCM) integration for pushing real-time alerts.
+
+## 🚀 Tech Stack
+
+- **Mobile:** React Native, Expo Router, Expo AV (Video), React Native WebView
+- **Frontend (Admin):** Next.js 15, React 19, TailwindCSS, Lucide Icons, TipTap Editor
+- **Backend:** Node.js, Express.js, MongoDB (Mongoose), JSON Web Tokens (JWT), Firebase Admin SDK
+- **Database:** MongoDB Atlas
+
+## 🛠️ Local Development Setup
+
+To run this project locally, you will need Node.js and MongoDB installed.
+
+### 1. Clone the repository
 ```bash
-cd backend
-cp .env.example .env
-# عدّل MONGODB_URI في ملف .env
-npm install
-npm run dev
+git clone https://github.com/tameraamr/ayam-knawyeh.git
+cd ayam-knawyeh
 ```
 
-> الخادم يعمل على: `http://localhost:5000`  
-> بيانات المدير الافتراضية: **admin / admin123**
+### 2. Backend Setup
+Navigate to the backend directory and install dependencies:
+```bash
+cd backend
+npm install
+```
+Create a `.env` file in the `backend/` directory using the provided `.env.example` template. You will need to provide your own MongoDB URI, JWT Secret, and Firebase Service Account credentials.
+```bash
+npm run dev
+```
+*The backend will start on `http://localhost:5000`*
 
----
-
-### 2. لوحة الإدارة (Admin Panel)
-
+### 3. Admin Dashboard Setup
+Open a new terminal and navigate to the admin directory:
 ```bash
 cd admin
 npm install
 npm run dev
 ```
+*The admin dashboard will start on `http://localhost:3000`*
 
-> تعمل على: `http://localhost:3000`  
-> سجّل الدخول بـ admin / admin123
-
----
-
-### 3. التطبيق الجوال (Mobile App)
-
-**المتطلبات:** Node.js 18+، Expo CLI، Android Studio أو Xcode
-
+### 4. Mobile App Setup
+Open a third terminal and navigate to the mobile directory:
 ```bash
 cd mobile
 npm install
-npx expo start
+npm start
 ```
+*Use the Expo Go app on your physical device, or run an iOS Simulator / Android Emulator to view the app.*
 
-ثم:
-- اضغط `a` لفتحه في محاكي Android
-- أو امسح QR Code بتطبيق Expo Go على هاتفك
+## 🛡️ Security & Privacy
+- **Environment Variables:** All sensitive keys (MongoDB URIs, Firebase secrets, JWT tokens) are strictly excluded via `.gitignore`. 
+- **Content Moderation:** The platform features built-in reporting mechanisms on both articles and advertisements to ensure a safe community environment.
 
-> **ملاحظة:** تأكد أن الخادم يعمل على `localhost:5000`
-
----
-
-## 🔥 إعداد Firebase (الإشعارات)
-
-1. اذهب إلى [Firebase Console](https://console.firebase.google.com)
-2. أنشئ مشروعاً جديداً
-3. **للخادم:**
-   - Project Settings → Service Accounts → Generate new private key
-   - انسخ القيم إلى `backend/.env`
-4. **لتطبيق Android:**
-   - أضف تطبيق Android (package: `com.ayamknawyeh.app`)
-   - حمّل `google-services.json` وضعه في `mobile/`
-5. **لتطبيق iOS:**
-   - أضف تطبيق iOS (Bundle ID: `com.ayamknawyeh.app`)
-   - حمّل `GoogleService-Info.plist` وضعه في `mobile/`
-
----
-
-## 🌐 النشر على Railway (Backend)
-
-```bash
-cd backend
-# أنشئ مشروعاً جديداً على railway.app
-# أضف متغيرات البيئة من .env.example
-# اربط مستودع GitHub بالمشروع
-```
-
-بعد النشر، حدّث:
-- `admin/.env.local`: `NEXT_PUBLIC_API_URL=https://your-railway-url.up.railway.app`
-- `mobile/.env`: `EXPO_PUBLIC_API_URL=https://your-railway-url.up.railway.app`
-
----
-
-## 📁 هيكل المشروع
-
-```
-ayam-knawyeh/
-├── backend/
-│   ├── src/
-│   │   ├── index.js          ← نقطة البداية
-│   │   ├── models/           ← Article, Ad, Admin
-│   │   ├── routes/           ← API endpoints
-│   │   ├── middleware/        ← JWT auth
-│   │   ├── services/         ← Firebase FCM
-│   │   └── utils/            ← Seed admin
-│   ├── uploads/              ← مجلد الصور (يُنشأ تلقائياً)
-│   └── .env
-├── admin/
-│   ├── app/
-│   │   ├── login/            ← صفحة تسجيل الدخول
-│   │   └── (dashboard)/      ← الصفحات المحمية
-│   │       ├── dashboard/    ← الإحصائيات
-│   │       ├── articles/     ← إدارة الأخبار
-│   │       ├── ads/          ← إدارة الإعلانات
-│   │       └── notifications/ ← إرسال الإشعارات
-│   └── components/
-│       ├── Sidebar.tsx
-│       └── TipTapEditor.tsx
-└── mobile/
-    ├── app/
-    │   ├── (tabs)/
-    │   │   ├── index.tsx     ← الرئيسية (الأخبار)
-    │   │   ├── categories.tsx ← التصنيفات
-    │   │   └── settings.tsx  ← الإعدادات
-    │   └── article/[id].tsx  ← تفاصيل الخبر
-    └── lib/
-        ├── api.ts
-        └── notifications.ts
-```
-
----
-
-## 🔑 API Endpoints
-
-| Method | URL | الوصف | الصلاحية |
-|--------|-----|-------|---------|
-| POST | `/api/auth/login` | تسجيل الدخول | عام |
-| GET | `/api/articles` | قائمة الأخبار | عام |
-| GET | `/api/articles/:id` | خبر محدد | عام |
-| POST | `/api/articles` | إضافة خبر | مدير |
-| PUT | `/api/articles/:id` | تعديل خبر | مدير |
-| DELETE | `/api/articles/:id` | حذف خبر | مدير |
-| GET | `/api/ads` | الإعلانات النشطة | عام |
-| POST | `/api/ads` | إضافة إعلان | مدير |
-| PUT | `/api/ads/:id` | تعديل إعلان | مدير |
-| DELETE | `/api/ads/:id` | حذف إعلان | مدير |
-| POST | `/api/upload` | رفع صورة | مدير |
-| POST | `/api/notifications/send` | إرسال إشعار | مدير |
-| GET | `/api/notifications/stats` | إحصائيات | مدير |
+## 📄 License
+All rights reserved. Proprietary software.
