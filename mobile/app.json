@@ -20,7 +20,13 @@
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+        "LSApplicationQueriesSchemes": [
+          "fb",
+          "instagram",
+          "tiktok",
+          "whatsapp"
+        ]
       }
     },
     "android": {
