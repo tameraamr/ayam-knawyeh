@@ -5,6 +5,9 @@
 import { Platform } from 'react-native';
 
 function getApiBase(): string {
+  // If this is a production build (APK/IPA), always force the cloud database
+  if (!__DEV__) return 'https://ayam-knawyeh-production.up.railway.app';
+  
   if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
   if (Platform.OS === 'web') return 'http://127.0.0.1:5000';
   if (Platform.OS === 'android') return 'http://10.0.2.2:5000';

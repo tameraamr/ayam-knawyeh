@@ -84,15 +84,9 @@ function HeroBanner({
       <View style={styles.modernBanner}>
         <View style={styles.bannerRow}>
 
-          {/* Left: Actions (Search + Notifications) */}
-          <View style={styles.bannerLeft}>
-            <TouchableOpacity style={styles.bannerLeftBtn} activeOpacity={0.7} onPress={onToggleNotifications}>
-              <Ionicons name={notificationsEnabled ? "notifications" : "notifications-off"} size={20} color={notificationsEnabled ? C.goldLight : C.textMuted} />
-              {notificationsEnabled && <View style={styles.notificationDot} />}
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.bannerLeftBtn} activeOpacity={0.7} onPress={onSearchPress}>
-              <Ionicons name="search" size={20} color={C.textPrimary} />
-            </TouchableOpacity>
+          {/* Right: Date (Standard Arabic Right-Side) */}
+          <View style={styles.bannerRight}>
+            <Text style={styles.bannerDateText}>{dateStr.replace('،', '\n')}</Text>
           </View>
 
           {/* Center: Huge Logo */}
@@ -104,9 +98,15 @@ function HeroBanner({
             />
           </View>
 
-          {/* Right: Date */}
-          <View style={styles.bannerRight}>
-            <Text style={styles.bannerDateText}>{dateStr.replace('،', '\n')}</Text>
+          {/* Left: Actions (Standard Arabic Left-Side) */}
+          <View style={styles.bannerLeft}>
+            <TouchableOpacity style={styles.bannerLeftBtn} activeOpacity={0.7} onPress={onToggleNotifications}>
+              <Ionicons name={notificationsEnabled ? "notifications" : "notifications-off"} size={20} color={notificationsEnabled ? C.goldLight : C.textMuted} />
+              {notificationsEnabled && <View style={styles.notificationDot} />}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.bannerLeftBtn} activeOpacity={0.7} onPress={onSearchPress}>
+              <Ionicons name="search" size={20} color={C.textPrimary} />
+            </TouchableOpacity>
           </View>
 
         </View>

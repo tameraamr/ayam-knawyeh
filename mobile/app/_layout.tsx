@@ -6,9 +6,17 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Audio } from 'expo-av';
 import { registerForPushNotifications } from '@/lib/notifications';
 
-// Force RTL for Arabic
-I18nManager.allowRTL(true);
-I18nManager.forceRTL(true);
+import * as Updates from 'expo-updates';
+
+// Force RTL for Arabic Standalone APKs
+// Standalone builds need a reload after forcing RTL to apply correctly
+if (!I18nManager.isRTL) {
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(true);
+  if (!__DEV__) {
+    Updates.reloadAsync();
+  }
+}
 
 
 export default function RootLayout() {

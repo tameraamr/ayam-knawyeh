@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#8b0000"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ayamknawyeh.app",
@@ -25,11 +27,18 @@
           "fb",
           "instagram",
           "tiktok",
+          "whatsapp",
+          "fb",
+          "instagram",
+          "tiktok",
           "whatsapp"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
+      "supportsRtl": true,
+      "forcesRtl": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#8b0000"
@@ -42,6 +51,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-localization",
       [
         "expo-notifications",
         {
@@ -52,6 +62,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7fd46ac6-5e64-4e37-8c7d-fa57874c90b0"
+      }
     }
   }
 }
