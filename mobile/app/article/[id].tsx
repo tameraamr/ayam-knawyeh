@@ -124,15 +124,16 @@ export default function ArticleScreen() {
 
   const handleShare = async () => {
     if (!article) return;
+    const shareUrl = `https://ayam-knawyeh.vercel.app/article/${article._id}`;
     if (Platform.OS === 'web') {
       if (navigator.share) {
-        await navigator.share({ title: article.title, text: article.description });
+        await navigator.share({ title: article.title, text: article.description, url: shareUrl });
       } else {
-        await navigator.clipboard.writeText(`${article.title}\n\n${article.description}`);
+        await navigator.clipboard.writeText(`${article.title}\n\n${shareUrl}`);
         alert('تم نسخ الرابط');
       }
     } else {
-      await Share.share({ title: article.title, message: `${article.title}\n\n${article.description}` });
+      await Share.share({ title: article.title, message: `${article.title}\n\n${shareUrl}` });
     }
   };
 
