@@ -59,9 +59,10 @@ function fixUrl(url?: string): string | undefined {
 }
 
 export const api = {
-  getArticles: async (page = 1, limit = 10, category?: string): Promise<{ articles: Article[]; pagination: Pagination }> => {
+  getArticles: async (page = 1, limit = 10, category?: string, search?: string): Promise<{ articles: Article[]; pagination: Pagination }> => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (category) params.set('category', category);
+    if (search) params.set('search', search);
     const res = await fetch(`${API_BASE}/api/articles?${params}`);
     if (!res.ok) throw new Error('فشل جلب الأخبار');
     const data = await res.json();
@@ -95,6 +96,17 @@ export const api = {
       content: a.content ? a.content.replace(/http:\/\/localhost:5000/g, API_BASE) : a.content,
     }));
     return data;
+  },
+
+  togglePushSubscription: async (token: string, subscribe: boolean) => {
+    const endpoint = subscribe ? 'subscribe' : 'unsubscribe';
+    const res = await fetch(`${API_BASE}/api/notifications/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    if (!res.ok) throw new Error('Failed to toggle subscription');
+    return res.json();
   },
 };
 

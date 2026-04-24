@@ -1,6 +1,6 @@
 const express = require('express');
 const authMiddleware = require('../middleware/auth');
-const { sendToAll } = require('../services/fcm');
+const { sendToAll, initFirebase } = require('../services/fcm');
 const Article = require('../models/Article');
 const Ad = require('../models/Ad');
 
@@ -42,6 +42,38 @@ router.get('/stats', authMiddleware, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'خطأ في جلب الإحصائيات' });
+  }
+});
+
+// POST /api/notifications/subscribe (public for mobile)
+router.post('/subscribe', async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ error: 'Token is required' });
+
+  const admin = initFirebase();
+  if (!admin) return res.status(500).json({ error: 'Firebase not configured' });
+
+  try {
+    await admin.messaging().subscribeToTopic(token, 'all');
+    res.json({ success: true, message: 'Subscribed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to subscribe' });
+  }
+});
+
+// POST /api/notifications/unsubscribe (public for mobile)
+router.post('/unsubscribe', async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ error: 'Token is required' });
+
+  const admin = initFirebase();
+  if (!admin) return res.status(500).json({ error: 'Firebase not configured' });
+
+  try {
+    await admin.messaging().unsubscribeFromTopic(token, 'all');
+    res.json({ success: true, message: 'Unsubscribed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to unsubscribe' });
   }
 });
 

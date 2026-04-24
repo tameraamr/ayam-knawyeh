@@ -1,13 +1,16 @@
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,
   Dimensions, StatusBar, Linking, ActivityIndicator,
-  RefreshControl, Platform, Animated, PanResponder, Pressable
+  RefreshControl, Platform, Animated, PanResponder, Pressable,
+  Alert, TextInput, Modal, SafeAreaView, KeyboardAvoidingView
 } from 'react-native';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, Article, Ad } from '@/lib/api';
+import { registerForPushNotifications } from '@/lib/notifications';
 
 // Simple fade-in wrapper using built-in Animated
 function FadeIn({ children, delay = 0, style }: { children: React.ReactNode; delay?: number; style?: any }) {
@@ -59,7 +62,15 @@ function PulseCard({ h = 200 }: { h?: number }) {
 }
 
 // ─── Banner Header (Modern Layout) ─────────────────────────────────────────────
-function HeroBanner() {
+function HeroBanner({ 
+  onSearchPress, 
+  notificationsEnabled, 
+  onToggleNotifications 
+}: { 
+  onSearchPress: () => void, 
+  notificationsEnabled: boolean, 
+  onToggleNotifications: () => void 
+}) {
   // ar-EG-u-nu-latn forces international numbers (1, 2, 3) but keeps Arabic language (أبريل, الخميس)
   const dateStr = new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
     weekday: 'long',
@@ -73,11 +84,14 @@ function HeroBanner() {
       <View style={styles.modernBanner}>
         <View style={styles.bannerRow}>
 
-          {/* Left: Notification Alert */}
+          {/* Left: Actions (Search + Notifications) */}
           <View style={styles.bannerLeft}>
-            <TouchableOpacity style={styles.bannerLeftBtn} activeOpacity={0.7}>
-              <Ionicons name="notifications" size={20} color={C.textPrimary} />
-              <View style={styles.notificationDot} />
+            <TouchableOpacity style={styles.bannerLeftBtn} activeOpacity={0.7} onPress={onToggleNotifications}>
+              <Ionicons name={notificationsEnabled ? "notifications" : "notifications-off"} size={20} color={notificationsEnabled ? C.goldLight : C.textMuted} />
+              {notificationsEnabled && <View style={styles.notificationDot} />}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.bannerLeftBtn} activeOpacity={0.7} onPress={onSearchPress}>
+              <Ionicons name="search" size={20} color={C.textPrimary} />
             </TouchableOpacity>
           </View>
 
@@ -455,6 +469,66 @@ export default function HomeScreen() {
   const [page, setPage] = useState(2);
   const [hasMore, setHasMore] = useState(true);
 
+  // Search & Notifications State
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Article[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem('notificationsEnabled').then(val => {
+      if (val !== null) setNotificationsEnabled(val === 'true');
+    });
+  }, []);
+
+  const handleToggleNotifications = () => {
+    Alert.alert(
+      'إعدادات الإشعارات',
+      notificationsEnabled 
+        ? 'هل أنت متأكد أنك تريد إيقاف جميع الإشعارات؟'
+        : 'هل تريد تفعيل الإشعارات للأخبار العاجلة؟',
+      [
+        { text: 'إلغاء', style: 'cancel' },
+        { 
+          text: notificationsEnabled ? 'إيقاف' : 'تفعيل', 
+          style: notificationsEnabled ? 'destructive' : 'default',
+          onPress: async () => {
+            const newState = !notificationsEnabled;
+            setNotificationsEnabled(newState);
+            await AsyncStorage.setItem('notificationsEnabled', newState.toString());
+            
+            const token = await registerForPushNotifications();
+            if (token) {
+              try {
+                await api.togglePushSubscription(token, newState);
+              } catch (e) {
+                console.log('API update skipped in Expo Go');
+              }
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const executeSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    setIsSearching(true);
+    try {
+      const data = await api.getArticles(1, 20, undefined, query);
+      setSearchResults(data.articles || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const fetchData = useCallback(async (reset = false) => {
     try {
       const [artData, adData] = await Promise.all([
@@ -514,6 +588,46 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.screen}>
+      {/* Search Modal */}
+      <Modal visible={searchVisible} animationType="slide" transparent={false}>
+        <KeyboardAvoidingView style={styles.searchModalContainer} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.searchHeader}>
+            <TouchableOpacity onPress={() => setSearchVisible(false)} style={styles.cancelSearchBtn}>
+              <Text style={styles.cancelSearchText}>إلغاء</Text>
+            </TouchableOpacity>
+            <View style={styles.searchInputWrap}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="ابحث عن خبر، عائلة، أو مناسبة..."
+                placeholderTextColor={C.textMuted}
+                autoFocus
+                returnKeyType="search"
+                value={searchQuery}
+                onChangeText={executeSearch}
+              />
+              <Ionicons name="search" size={18} color={C.textMuted} />
+            </View>
+          </View>
+          
+          <ScrollView style={styles.searchBody} keyboardShouldPersistTaps="handled">
+            {isSearching ? (
+              <ActivityIndicator size="large" color={C.red} style={{ marginTop: 40 }} />
+            ) : searchResults.length > 0 ? (
+              searchResults.map((article, index) => (
+                <View key={article._id} style={{ marginBottom: 12 }}>
+                  <ArticleRow article={article} index={index} />
+                </View>
+              ))
+            ) : searchQuery.length >= 2 ? (
+              <View style={styles.searchEmpty}>
+                <Ionicons name="search-outline" size={48} color={C.cardBorder} />
+                <Text style={[styles.emptyText, { marginTop: 16 }]}>لم يتم العثور على نتائج</Text>
+              </View>
+            ) : null}
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
+
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -523,7 +637,11 @@ export default function HomeScreen() {
         <StatusBar barStyle="light-content" backgroundColor={C.redDark} />
 
         {/* ① HERO BANNER */}
-        <HeroBanner />
+        <HeroBanner 
+          onSearchPress={() => setSearchVisible(true)} 
+          notificationsEnabled={notificationsEnabled}
+          onToggleNotifications={handleToggleNotifications}
+        />
 
         {/* ② PINNED AD */}
         {pinnedAd && <PinnedAdCard ad={pinnedAd} />}
@@ -798,4 +916,14 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: 10 },
   emptyText: { color: C.textSecondary, fontSize: 18, fontWeight: '700' },
   emptySubText: { color: C.textMuted, fontSize: 13 },
+  
+  // ── Search Modal ──
+  searchModalContainer: { flex: 1, backgroundColor: C.bg },
+  searchHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 20 : 50, paddingBottom: 16, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.cardBorder, gap: 12 },
+  searchInputWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 12, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: C.cardBorder },
+  searchInput: { flex: 1, color: C.textPrimary, textAlign: 'right', fontSize: 15, marginStart: 8, height: '100%' },
+  cancelSearchBtn: { padding: 8 },
+  cancelSearchText: { color: C.red, fontSize: 16, fontWeight: '600' },
+  searchBody: { flex: 1, padding: 16 },
+  searchEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', opacity: 0.5 },
 });

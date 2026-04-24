@@ -48,9 +48,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
       });
     }
 
-    const token = await Notifications.default.getExpoPushTokenAsync({
-      projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
-    }).catch(() => null);
+    const token = await Notifications.default.getDevicePushTokenAsync().catch(() => null);
 
     return token?.data ?? null;
   } catch (e) {
