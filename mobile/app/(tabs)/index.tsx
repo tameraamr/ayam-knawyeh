@@ -576,7 +576,11 @@ export default function HomeScreen() {
     return (
       <View style={styles.screen}>
         <StatusBar barStyle="light-content" backgroundColor={C.redDark} />
-        <HeroBanner />
+        <HeroBanner 
+          onSearchPress={() => {}} 
+          notificationsEnabled={true} 
+          onToggleNotifications={() => {}} 
+        />
         <PulseCard h={220} />
         <PulseCard h={200} />
         <PulseCard h={80} />
