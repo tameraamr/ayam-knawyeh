@@ -1,7 +1,7 @@
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,
   Dimensions, StatusBar, Linking, ActivityIndicator,
-  RefreshControl, Platform, Animated, PanResponder,
+  RefreshControl, Platform, Animated, PanResponder, Pressable
 } from 'react-native';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'expo-router';
@@ -179,6 +179,24 @@ function VideoPreview({ uri }: { uri: string }) {
   );
 }
 
+// ─── Animated Card Wrapper ───────────────────────────────────────────────────
+function AnimatedCard({ children, onPress, style }: { children: React.ReactNode; onPress: () => void; style?: any }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        style,
+        {
+          transform: [{ scale: pressed ? 0.97 : 1 }],
+          opacity: pressed ? 0.9 : 1,
+        }
+      ]}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
 // ─── Pinned Ad Card ────────────────────────────────────────────────────────────
 function PinnedAdCard({ ad }: { ad: Ad }) {
   const router = useRouter();
@@ -194,33 +212,31 @@ function PinnedAdCard({ ad }: { ad: Ad }) {
         </View>
       </View>
 
-      <View style={styles.adCard}>
-        <TouchableOpacity activeOpacity={0.92} onPress={() => router.push(`/ad/${ad._id}` as any)}>
-          {/* Media */}
-          <View style={styles.adImageWrap}>
-            {ad.videoUrl ? (
-              <VideoPreview uri={ad.videoUrl} />
-            ) : ad.imageUrl ? (
-              <Image source={{ uri: ad.imageUrl }} style={styles.adImage} resizeMode="cover" />
-            ) : (
-              <LinearGradient colors={[C.redDark, C.card]} style={styles.adImagePlaceholder}>
-                <Ionicons name="megaphone" size={42} color={C.redLight} />
-              </LinearGradient>
-            )}
-            <MediaBadge hasVideo={!!ad.videoUrl} />
-            <LinearGradient
-              colors={['transparent', 'rgba(10,0,0,0.6)', 'rgba(10,0,0,0.95)']}
-              style={styles.adOverlay}
-            />
-            <View style={styles.adOverlayContent}>
-              <Text style={styles.adTitle} numberOfLines={2}>{ad.title}</Text>
-              {ad.description ? (
-                <Text style={styles.adDesc} numberOfLines={2}>{ad.description}</Text>
-              ) : null}
-            </View>
+      <AnimatedCard style={styles.adCard} onPress={() => router.push(`/ad/${ad._id}` as any)}>
+        {/* Media */}
+        <View style={styles.adImageWrap}>
+          {ad.videoUrl ? (
+            <VideoPreview uri={ad.videoUrl} />
+          ) : ad.imageUrl ? (
+            <Image source={{ uri: ad.imageUrl }} style={styles.adImage} resizeMode="cover" />
+          ) : (
+            <LinearGradient colors={[C.redDark, C.card]} style={styles.adImagePlaceholder}>
+              <Ionicons name="megaphone" size={42} color={C.redLight} />
+            </LinearGradient>
+          )}
+          <MediaBadge hasVideo={!!ad.videoUrl} />
+          <LinearGradient
+            colors={['transparent', 'rgba(10,0,0,0.6)', 'rgba(10,0,0,0.95)']}
+            style={styles.adOverlay}
+          />
+          <View style={styles.adOverlayContent}>
+            <Text style={styles.adTitle} numberOfLines={2}>{ad.title}</Text>
+            {ad.description ? (
+              <Text style={styles.adDesc} numberOfLines={2}>{ad.description}</Text>
+            ) : null}
           </View>
-        </TouchableOpacity>
-      </View>
+        </View>
+      </AnimatedCard>
     </FadeIn>
   );
 }
@@ -245,7 +261,7 @@ function FeaturedArticle({ article }: { article: Article }) {
         </View>
       </View>
 
-      <TouchableOpacity activeOpacity={0.9} onPress={() => router.push(`/article/${article._id}`)}>
+      <AnimatedCard onPress={() => router.push(`/article/${article._id}`)}>
         <View style={styles.featuredCard}>
           {article.imageUrl ? (
             <Image source={{ uri: article.imageUrl }} style={styles.featuredImage} resizeMode="cover" />
@@ -276,7 +292,7 @@ function FeaturedArticle({ article }: { article: Article }) {
             </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </AnimatedCard>
     </FadeIn>
   );
 }
@@ -288,10 +304,9 @@ function ArticleRow({ article, index }: { article: Article; index: number }) {
 
   return (
     <FadeIn delay={index * 60}>
-      <TouchableOpacity
+      <AnimatedCard
         style={styles.articleRow}
         onPress={() => router.push(`/article/${article._id}`)}
-        activeOpacity={0.8}
       >
         {/* Thumbnail */}
         <View style={styles.thumbWrap}>
@@ -324,7 +339,7 @@ function ArticleRow({ article, index }: { article: Article; index: number }) {
 
         {/* Arrow */}
         <Ionicons name="chevron-back" size={16} color={C.textMuted} style={{ marginStart: 4 }} />
-      </TouchableOpacity>
+      </AnimatedCard>
     </FadeIn>
   );
 }
