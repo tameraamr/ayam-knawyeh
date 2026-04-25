@@ -9,7 +9,17 @@ const C = {
   textSecondary: '#a08878', textMuted: '#5a3a3a',
 };
 
+import * as Updates from 'expo-updates';
+import { I18nManager } from 'react-native';
+
 export default function TabLayout() {
+  // Ensure RTL is enforced in tabs
+  if (!I18nManager.isRTL && !__DEV__) {
+    I18nManager.allowRTL(true);
+    I18nManager.forceRTL(true);
+    Updates.reloadAsync();
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -23,10 +33,11 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="settings"
+        name="index"
         options={{
-          title: 'الإعدادات',
-          tabBarIcon: ({ focused }) => <Ionicons name={focused ? 'settings' : 'settings-outline'} size={24} color={focused ? C.gold : C.textSecondary} />,
+          title: 'أيام كناوية',
+          headerShown: false,
+          tabBarIcon: ({ focused }) => <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={focused ? C.gold : C.textSecondary} />,
         }}
       />
       <Tabs.Screen
@@ -37,11 +48,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="index"
+        name="settings"
         options={{
-          title: 'أيام كناوية',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={focused ? C.gold : C.textSecondary} />,
+          title: 'الإعدادات',
+          tabBarIcon: ({ focused }) => <Ionicons name={focused ? 'settings' : 'settings-outline'} size={24} color={focused ? C.gold : C.textSecondary} />,
         }}
       />
     </Tabs>
