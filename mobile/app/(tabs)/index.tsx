@@ -62,14 +62,14 @@ function PulseCard({ h = 200 }: { h?: number }) {
 }
 
 // ─── Banner Header (Modern Layout) ─────────────────────────────────────────────
-function HeroBanner({ 
-  onSearchPress, 
-  notificationsEnabled, 
-  onToggleNotifications 
-}: { 
-  onSearchPress: () => void, 
-  notificationsEnabled: boolean, 
-  onToggleNotifications: () => void 
+function HeroBanner({
+  onSearchPress,
+  notificationsEnabled,
+  onToggleNotifications
+}: {
+  onSearchPress: () => void,
+  notificationsEnabled: boolean,
+  onToggleNotifications: () => void
 }) {
   // ar-EG-u-nu-latn forces international numbers (1, 2, 3) but keeps Arabic language (أبريل, الخميس)
   const dateStr = new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
@@ -152,7 +152,7 @@ function SocialFooter() {
         </TouchableOpacity>
       </View>
       <Text style={styles.footerCopy}>© 2025 أيام كناوية — جميع الحقوق محفوظة</Text>
-      <TouchableOpacity onPress={() => Linking.openURL('https://linkedin.com/in/tameraamr')} style={styles.poweredByBtn}>
+      <TouchableOpacity onPress={() => Linking.openURL('https://tamer-omar.com')} style={styles.poweredByBtn}>
         <Text style={styles.poweredByText}>
           Powered by <Text style={{ color: C.gold, fontWeight: 'bold' }}>Tamer Omar</Text>
         </Text>
@@ -485,19 +485,19 @@ export default function HomeScreen() {
   const handleToggleNotifications = () => {
     Alert.alert(
       'إعدادات الإشعارات',
-      notificationsEnabled 
+      notificationsEnabled
         ? 'هل أنت متأكد أنك تريد إيقاف جميع الإشعارات؟'
         : 'هل تريد تفعيل الإشعارات للأخبار العاجلة؟',
       [
         { text: 'إلغاء', style: 'cancel' },
-        { 
-          text: notificationsEnabled ? 'إيقاف' : 'تفعيل', 
+        {
+          text: notificationsEnabled ? 'إيقاف' : 'تفعيل',
           style: notificationsEnabled ? 'destructive' : 'default',
           onPress: async () => {
             const newState = !notificationsEnabled;
             setNotificationsEnabled(newState);
             await AsyncStorage.setItem('notificationsEnabled', newState.toString());
-            
+
             const token = await registerForPushNotifications();
             if (token) {
               try {
@@ -576,10 +576,10 @@ export default function HomeScreen() {
     return (
       <View style={styles.screen}>
         <StatusBar barStyle="light-content" backgroundColor={C.redDark} />
-        <HeroBanner 
-          onSearchPress={() => {}} 
-          notificationsEnabled={true} 
-          onToggleNotifications={() => {}} 
+        <HeroBanner
+          onSearchPress={() => { }}
+          notificationsEnabled={true}
+          onToggleNotifications={() => { }}
         />
         <PulseCard h={220} />
         <PulseCard h={200} />
@@ -612,7 +612,7 @@ export default function HomeScreen() {
               <Ionicons name="search" size={18} color={C.textMuted} />
             </View>
           </View>
-          
+
           <ScrollView style={styles.searchBody} keyboardShouldPersistTaps="handled">
             {isSearching ? (
               <ActivityIndicator size="large" color={C.red} style={{ marginTop: 40 }} />
@@ -641,8 +641,8 @@ export default function HomeScreen() {
         <StatusBar barStyle="light-content" backgroundColor={C.redDark} />
 
         {/* ① HERO BANNER */}
-        <HeroBanner 
-          onSearchPress={() => setSearchVisible(true)} 
+        <HeroBanner
+          onSearchPress={() => setSearchVisible(true)}
           notificationsEnabled={notificationsEnabled}
           onToggleNotifications={handleToggleNotifications}
         />
@@ -920,7 +920,7 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: 10 },
   emptyText: { color: C.textSecondary, fontSize: 18, fontWeight: '700' },
   emptySubText: { color: C.textMuted, fontSize: 13 },
-  
+
   // ── Search Modal ──
   searchModalContainer: { flex: 1, backgroundColor: C.bg },
   searchHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 20 : 50, paddingBottom: 16, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.cardBorder, gap: 12 },
