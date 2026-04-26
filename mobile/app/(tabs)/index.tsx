@@ -477,9 +477,23 @@ export default function HomeScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   useEffect(() => {
-    AsyncStorage.getItem('notificationsEnabled').then(val => {
-      if (val !== null) setNotificationsEnabled(val === 'true');
-    });
+    const setupNotifications = async () => {
+      const val = await AsyncStorage.getItem('notificationsEnabled');
+      const isEnabled = val === null || val === 'true';
+      setNotificationsEnabled(isEnabled);
+
+      if (isEnabled) {
+        const token = await registerForPushNotifications();
+        if (token) {
+          try {
+            await api.togglePushSubscription(token, true);
+          } catch (e) {
+            console.log('Push subscription sync skipped');
+          }
+        }
+      }
+    };
+    setupNotifications();
   }, []);
 
   const handleToggleNotifications = () => {
@@ -502,8 +516,11 @@ export default function HomeScreen() {
             if (token) {
               try {
                 await api.togglePushSubscription(token, newState);
+                if (newState) {
+                  Alert.alert('تم التفعيل', 'تم تفعيل الإشعارات بنجاح!');
+                }
               } catch (e) {
-                console.log('API update skipped in Expo Go');
+                console.log('Push subscription sync skipped');
               }
             }
           }

@@ -106,7 +106,7 @@ export const api = {
     const res = await fetch(`${API_BASE}/api/notifications/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, platform: Platform.OS }),
     });
     if (!res.ok) throw new Error('Failed to toggle subscription');
     return res.json();
