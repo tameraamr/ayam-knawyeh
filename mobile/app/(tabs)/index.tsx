@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
   whatsappContainer: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 100 : 90,
-    right: 20,
+    left: 20, // Physical left in RTL
     zIndex: 999,
   },
   fabWhatsApp: {
@@ -766,14 +766,14 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   bannerRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
   },
-  bannerLeft: { flex: 1, alignItems: 'flex-end' },
-  bannerCenter: { flex: 1.5, alignItems: 'center' },
-  bannerRight: { flex: 1, alignItems: 'flex-start' },
+  bannerLeft: { flex: 1, alignItems: 'flex-start' }, // Pushes Bell/Search to the far left
+  bannerCenter: { flex: 2, alignItems: 'center' },
+  bannerRight: { flex: 1, alignItems: 'flex-end' }, // Pushes Date to the far right
   modernLogo: { width: 180, height: 95 },
   bannerLeftBtn: {
     width: 42, height: 42, borderRadius: 21, backgroundColor: C.bg,
@@ -800,7 +800,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   footerSocial: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'center',
     gap: 16,
     marginBottom: 14,
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
   },
 
   // ── Section labels ──
-  sectionLabelRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10, paddingHorizontal: 16, marginBottom: 10, marginTop: 18 },
+  sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, marginBottom: 10, marginTop: 18 },
   sectionLabelBar: { flex: 1, height: 2, borderRadius: 2 },
   adPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -894,7 +894,7 @@ const styles = StyleSheet.create({
   // ── Articles section ──
   articlesSection: { paddingBottom: 8 },
   sectionHeader: {
-    flexDirection: 'row-reverse', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     gap: 12, paddingHorizontal: 16, marginVertical: 18,
   },
   sectionLine: { flex: 1, height: 1, borderRadius: 1 },
@@ -911,7 +911,7 @@ const styles = StyleSheet.create({
 
   // ── Article Row ──
   articleRow: {
-    flexDirection: 'row-reverse', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     gap: 12, paddingVertical: 12, paddingHorizontal: 12,
     borderBottomWidth: 1, borderBottomColor: C.cardBorder,
   },
@@ -922,8 +922,8 @@ const styles = StyleSheet.create({
   articleText: { flex: 1, gap: 5 },
   catBadgeSmall: { alignSelf: 'flex-end', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   catBadgeSmallText: { fontSize: 10, fontWeight: '700' },
-  articleTitle: { color: C.textPrimary, fontSize: 13, fontWeight: '700', textAlign: 'right', lineHeight: 20 },
-  articleMeta: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
+  articleTitle: { color: C.textPrimary, fontSize: 13, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl', lineHeight: 20 },
+  articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
   articleMetaText: { color: C.textMuted, fontSize: 11 },
 
   // ── See All ──
