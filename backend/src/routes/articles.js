@@ -1,7 +1,8 @@
 const express = require('express');
 const Article = require('../models/Article');
 const authMiddleware = require('../middleware/auth');
-const { sendToAll } = require('../services/fcm');
+const { sendPushNotifications } = require('../services/expoPush');
+const PushToken = require('../models/PushToken');
 
 const router = express.Router();
 
@@ -83,7 +84,17 @@ router.post('/', authMiddleware, async (req, res) => {
 
     // Send push notification if requested
     if (sendNotification && article.isPublished) {
-      await sendToAll(title, description, { articleId: article._id.toString() });
+      try {
+        const tokenDocs = await PushToken.find({ active: true });
+        const tokens = tokenDocs.map(doc => doc.token);
+        
+        if (tokens.length > 0) {
+          await sendPushNotifications(tokens, title, description, { articleId: article._id.toString() });
+          console.log(`📨 Article notification sent to ${tokens.length} devices`);
+        }
+      } catch (e) {
+        console.error('Error sending article notification:', e);
+      }
     }
 
     res.status(201).json({ article });
