@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
   },
 
   // ── Section labels ──
-  sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, marginBottom: 10, marginTop: 18 },
+  sectionLabelRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10, paddingHorizontal: 16, marginBottom: 10, marginTop: 18 },
   sectionLabelBar: { flex: 1, height: 2, borderRadius: 2 },
   adPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -892,7 +892,7 @@ const styles = StyleSheet.create({
   featuredImage: { width: '100%', height: IS_WEB ? 220 : H * 0.3 },
   featuredImagePlaceholder: { width: '100%', height: IS_WEB ? 220 : H * 0.3, alignItems: 'center', justifyContent: 'center' },
   featuredOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '80%' },
-  featuredContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, gap: 6 },
+  featuredContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, gap: 6, alignItems: 'flex-end' },
   catBadge: {
     alignSelf: 'flex-end', borderRadius: 8,
     paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1,
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
   catBadgeText: { fontSize: 11, fontWeight: '800' },
   featuredTitle: { color: '#fff', fontSize: 17, fontWeight: '800', textAlign: 'right', lineHeight: 26 },
   featuredDesc: { color: 'rgba(255,255,255,0.7)', fontSize: 12, textAlign: 'right' },
-  featuredMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  featuredMeta: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
   metaLeft: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaText: { color: C.textSecondary, fontSize: 12 },
   metaDate: { color: C.textSecondary, fontSize: 12 },
