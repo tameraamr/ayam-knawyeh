@@ -933,11 +933,11 @@ const styles = StyleSheet.create({
   thumb: { width: 82, height: 66, borderRadius: 12 },
   thumbPlaceholder: { width: 82, height: 66, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   thumbCatDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, borderWidth: 1.5, borderColor: C.card },
-  articleText: { flex: 1, gap: 5 },
+  articleText: { flex: 1, gap: 5, alignItems: 'flex-end' },
   catBadgeSmall: { alignSelf: 'flex-end', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   catBadgeSmallText: { fontSize: 10, fontWeight: '700' },
-  articleTitle: { color: C.textPrimary, fontSize: 13, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl', lineHeight: 20 },
-  articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'flex-start' },
+  articleTitle: { color: C.textPrimary, fontSize: 13, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl', lineHeight: 20, width: '100%' },
+  articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
   articleMetaText: { color: C.textMuted, fontSize: 11, textAlign: 'right', writingDirection: 'rtl' },
 
   // ── See All ──
