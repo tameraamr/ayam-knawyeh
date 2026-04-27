@@ -2,8 +2,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image } 
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000';
-const FRONTEND_URL = process.env.EXPO_PUBLIC_FRONTEND_URL || 'http://10.0.2.2:3000'; // Change to your domain in production
+const API_BASE = __DEV__ 
+  ? (process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000')
+  : 'https://ayam-knawyeh-production.up.railway.app';
+
+const FRONTEND_URL = __DEV__
+  ? (process.env.EXPO_PUBLIC_FRONTEND_URL || 'http://10.0.2.2:3000')
+  : 'https://ayam-knawyeh.vercel.app';
 
 export default function SettingsScreen() {
   return (
