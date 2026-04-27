@@ -138,7 +138,7 @@ function SocialFooter() {
         style={{ height: 1, marginBottom: 16 }}
       />
       <View style={styles.footerSocial}>
-        <TouchableOpacity style={styles.footerBtn} onPress={() => openSocialLink('fb://facewebmodal/f?href=https://facebook.com/kanna.days', 'https://facebook.com/kanna.days')}>
+        <TouchableOpacity style={styles.footerBtn} onPress={() => openSocialLink('fb://facewebmodal/f?href=https://facebook.com/kanna.days2', 'https://facebook.com/kanna.days2')}>
           <FontAwesome5 name="facebook-f" size={14} color={C.gold} />
           <Text style={styles.footerBtnLabel}>Facebook</Text>
         </TouchableOpacity>
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
   whatsappContainer: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 100 : 90,
-    left: 20, // Physical left in RTL
+    right: 20, // Physical Left in RTL mode
     zIndex: 999,
   },
   fabWhatsApp: {
@@ -769,12 +769,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20, // Extreme sides
+    width: '100%',
   },
-  bannerLeft: { flex: 1, alignItems: 'flex-start' }, // Pushes Bell/Search to the far left
-  bannerCenter: { flex: 2, alignItems: 'center' },
-  bannerRight: { flex: 1, alignItems: 'flex-end' }, // Pushes Date to the far right
-  modernLogo: { width: 180, height: 95 },
+  bannerLeft: { 
+    width: 80, // Fixed width to prevent crowding
+    alignItems: 'flex-start', 
+  },
+  bannerCenter: { 
+    flex: 1, 
+    alignItems: 'center',
+  },
+  bannerRight: { 
+    width: 80, // Fixed width to prevent crowding
+    alignItems: 'flex-end', 
+  },
+  modernLogo: { width: 140, height: 75, resizeMode: 'contain' },
   bannerLeftBtn: {
     width: 42, height: 42, borderRadius: 21, backgroundColor: C.bg,
     alignItems: 'center', justifyContent: 'center',
@@ -924,7 +934,7 @@ const styles = StyleSheet.create({
   catBadgeSmallText: { fontSize: 10, fontWeight: '700' },
   articleTitle: { color: C.textPrimary, fontSize: 13, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl', lineHeight: 20 },
   articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
-  articleMetaText: { color: C.textMuted, fontSize: 11 },
+  articleMetaText: { color: C.textMuted, fontSize: 11, textAlign: 'right', writingDirection: 'rtl' },
 
   // ── See All ──
   seeAllWrap: { marginHorizontal: 16, marginTop: 16, borderRadius: 14, overflow: 'hidden' },
