@@ -322,20 +322,7 @@ function ArticleRow({ article, index }: { article: Article; index: number }) {
         style={styles.articleRow}
         onPress={() => router.push(`/article/${article._id}`)}
       >
-        {/* Thumbnail */}
-        <View style={styles.thumbWrap}>
-          {article.imageUrl ? (
-            <Image source={{ uri: article.imageUrl }} style={styles.thumb} resizeMode="cover" />
-          ) : (
-            <LinearGradient colors={[C.redDark, C.card]} style={styles.thumbPlaceholder}>
-              <Ionicons name="newspaper-outline" size={22} color={C.textMuted} />
-            </LinearGradient>
-          )}
-          <MediaBadge hasVideo={!!article.videoUrl} />
-          <View style={[styles.thumbCatDot, { backgroundColor: catColor }]} />
-        </View>
-
-        {/* Text */}
+        {/* Text section (Primary on Right in RTL) */}
         <View style={styles.articleText}>
           <View style={[styles.catBadgeSmall, { backgroundColor: catColor + '20' }]}>
             <Text style={[styles.catBadgeSmallText, { color: catColor }]}>{article.category}</Text>
@@ -351,8 +338,21 @@ function ArticleRow({ article, index }: { article: Article; index: number }) {
           </View>
         </View>
 
-        {/* Arrow */}
-        <Ionicons name="chevron-back" size={16} color={C.textMuted} style={{ marginStart: 4 }} />
+        {/* Thumbnail (Secondary on Left in RTL) */}
+        <View style={styles.thumbWrap}>
+          {article.imageUrl ? (
+            <Image source={{ uri: article.imageUrl }} style={styles.thumb} resizeMode="cover" />
+          ) : (
+            <LinearGradient colors={[C.redDark, C.card]} style={styles.thumbPlaceholder}>
+              <Ionicons name="newspaper-outline" size={22} color={C.textMuted} />
+            </LinearGradient>
+          )}
+          <MediaBadge hasVideo={!!article.videoUrl} />
+          <View style={[styles.thumbCatDot, { backgroundColor: catColor }]} />
+        </View>
+
+        {/* Arrow (Far Left) */}
+        <Ionicons name="chevron-back" size={16} color={C.textMuted} />
       </AnimatedCard>
     </FadeIn>
   );
@@ -769,20 +769,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 10, 
+    paddingHorizontal: 10,
     width: '100%',
   },
-  bannerLeft: { 
-    flex: 1, 
-    alignItems: 'flex-start', 
+  bannerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 10,
   },
-  bannerCenter: { 
-    flex: 2, 
+  bannerCenter: {
+    flex: 2,
     alignItems: 'center',
   },
-  bannerRight: { 
-    flex: 1, 
-    alignItems: 'flex-end', 
+  bannerRight: {
+    flex: 1,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   modernLogo: { width: 140, height: 75, resizeMode: 'contain' },
   bannerLeftBtn: {

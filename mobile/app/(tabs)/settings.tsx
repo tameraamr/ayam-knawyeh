@@ -62,11 +62,11 @@ export default function SettingsScreen() {
 function ClickableRow({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
   return (
     <TouchableOpacity style={styles.row} onPress={onPress}>
-      <Ionicons name="chevron-back" size={16} color="#4b5563" />
       <View style={styles.rowLeft}>
-        <Text style={styles.rowLabel}>{label}</Text>
         <Ionicons name={icon as never} size={18} color="#6b7280" />
+        <Text style={styles.rowLabel}>{label}</Text>
       </View>
+      <Ionicons name="chevron-back" size={16} color="#4b5563" />
     </TouchableOpacity>
   );
 }
@@ -74,11 +74,11 @@ function ClickableRow({ icon, label, onPress }: { icon: string; label: string; o
 function Row({ icon, label, value, mono }: { icon: string; label: string; value: string; mono?: boolean }) {
   return (
     <View style={styles.row}>
-      <Text style={[styles.rowValue, mono && styles.mono]} numberOfLines={1}>{value}</Text>
       <View style={styles.rowLeft}>
-        <Text style={styles.rowLabel}>{label}</Text>
         <Ionicons name={icon as never} size={18} color="#6b7280" />
+        <Text style={styles.rowLabel}>{label}</Text>
       </View>
+      <Text style={[styles.rowValue, mono && styles.mono]} numberOfLines={1}>{value}</Text>
     </View>
   );
 }

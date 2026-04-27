@@ -44,6 +44,7 @@
         "backgroundColor": "#8b0000"
       },
       "package": "com.ayamknawyeh.app",
+      "googleServicesFile": "./google-services.json",
       "versionCode": 1
     },
     "web": {
