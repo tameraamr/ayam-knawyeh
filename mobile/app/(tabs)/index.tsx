@@ -933,7 +933,7 @@ const styles = StyleSheet.create({
   catBadgeSmall: { alignSelf: 'flex-end', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   catBadgeSmallText: { fontSize: 10, fontWeight: '700' },
   articleTitle: { color: C.textPrimary, fontSize: 13, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl', lineHeight: 20 },
-  articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
+  articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'flex-start' },
   articleMetaText: { color: C.textMuted, fontSize: 11, textAlign: 'right', writingDirection: 'rtl' },
 
   // ── See All ──
