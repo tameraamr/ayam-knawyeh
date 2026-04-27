@@ -52,7 +52,6 @@ export default function EditAdPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title) { toast.error('عنوان الإعلان مطلوب'); return; }
     setSaving(true);
     try {
       await apiClient.put(`/api/ads/${id}`, form, token!);
@@ -92,7 +91,7 @@ export default function EditAdPage() {
 
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">العنوان <span className="text-red-400">*</span></label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">العنوان</label>
             <input value={form.title} onChange={e => set('title', e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500" />
           </div>
           <div>

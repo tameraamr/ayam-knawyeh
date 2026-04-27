@@ -28,7 +28,6 @@ router.get('/all', authMiddleware, async (req, res) => {
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const { title, description, content, imageUrl, videoUrl, linkUrl, isPinned, isActive, order } = req.body;
-    if (!title) return res.status(400).json({ error: 'عنوان الإعلان مطلوب' });
 
     const ad = await Ad.create({ title, description, content, imageUrl, videoUrl, linkUrl, isPinned, isActive, order: order || 0 });
     res.status(201).json({ ad });

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const adSchema = new mongoose.Schema({
-  title: { type: String, required: true, trim: true },
+  title: { type: String, trim: true, default: '' },
   description: { type: String, trim: true, default: '' },
   content: { type: String, default: '' }, // Rich HTML content (like article body)
   imageUrl: { type: String, default: null },
