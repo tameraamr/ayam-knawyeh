@@ -769,19 +769,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20, // Extreme sides
+    paddingHorizontal: 10, 
     width: '100%',
   },
   bannerLeft: { 
-    width: 80, // Fixed width to prevent crowding
+    flex: 1, 
     alignItems: 'flex-start', 
   },
   bannerCenter: { 
-    flex: 1, 
+    flex: 2, 
     alignItems: 'center',
   },
   bannerRight: { 
-    width: 80, // Fixed width to prevent crowding
+    flex: 1, 
     alignItems: 'flex-end', 
   },
   modernLogo: { width: 140, height: 75, resizeMode: 'contain' },
