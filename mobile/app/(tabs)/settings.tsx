@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12 },
   rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   rowLabel: { color: '#d1d5db', fontSize: 14, textAlign: 'right', writingDirection: 'rtl' },
-  rowValue: { color: '#6b7280', fontSize: 13, maxWidth: '55%', textAlign: 'left', writingDirection: 'rtl' },
+  rowValue: { color: '#6b7280', fontSize: 13, maxWidth: '55%', textAlign: 'right', writingDirection: 'rtl' },
   mono: { fontFamily: 'monospace', fontSize: 11, color: '#4b5563' },
   about: { color: '#9ca3af', fontSize: 14, lineHeight: 22, textAlign: 'right', writingDirection: 'rtl', padding: 14 },
   footer: { color: '#374151', fontSize: 12, textAlign: 'center', marginTop: 20 },
