@@ -195,7 +195,7 @@ export default function AdDetailScreen() {
                 contentContainerStyle={{ 
                     flexGrow: 1, 
                     paddingBottom: 40,
-                    paddingTop: (!ad.videoUrl && !ad.imageUrl) ? insets.top + 20 : 0
+                    paddingTop: insets.top + 12
                 }} 
                 showsVerticalScrollIndicator={false} 
                 nestedScrollEnabled={true}
