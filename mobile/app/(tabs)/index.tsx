@@ -2,12 +2,14 @@ import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,
   Dimensions, StatusBar, Linking, ActivityIndicator,
   RefreshControl, Platform, Animated, PanResponder, Pressable,
-  Alert, TextInput, Modal, SafeAreaView, KeyboardAvoidingView
+  Alert, TextInput, Modal, SafeAreaView, KeyboardAvoidingView,
+  FlatList
 } from 'react-native';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, Article, Ad } from '@/lib/api';
 import { registerForPushNotifications } from '@/lib/notifications';
@@ -261,53 +263,111 @@ const CAT_COLORS: Record<string, string> = {
   'افراح': '#f97316', 'يصادف اليوم': '#eab308', 'محلات تجارية': '#ec4899', 'تنويهات': '#06b6d4',
 };
 
-function FeaturedArticle({ article }: { article: Article }) {
+function FeaturedSlider({ articles }: { articles: Article[] }) {
   const router = useRouter();
-  const catColor = CAT_COLORS[article.category] || C.red;
+  const [activeIndex, setActiveIndex] = useState(0);
+  const flatListRef = useRef<FlatList>(null);
+  const autoScrollTimer = useRef<any>(null);
+
+  const startAutoScroll = () => {
+    stopAutoScroll();
+    if (articles.length <= 1) return;
+    autoScrollTimer.current = setInterval(() => {
+      const nextIndex = (activeIndex + 1) % articles.length;
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+    }, 4000);
+  };
+
+  const stopAutoScroll = () => {
+    if (autoScrollTimer.current) {
+      clearInterval(autoScrollTimer.current);
+      autoScrollTimer.current = null;
+    }
+  };
+
+  useEffect(() => {
+    startAutoScroll();
+    return () => stopAutoScroll();
+  }, [activeIndex, articles.length]);
+
+  const onScroll = (event: any) => {
+    const scrollOffset = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollOffset / SCREEN_WIDTH);
+    if (index !== activeIndex) {
+      setActiveIndex(index);
+    }
+  };
+
+  if (articles.length === 0) return null;
 
   return (
-    <FadeIn delay={200} style={styles.featuredWrap}>
+    <View style={styles.sliderWrap}>
       <View style={styles.sectionLabelRow}>
         <LinearGradient colors={[C.gold, C.goldLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.sectionLabelBar} />
         <View style={[styles.adPill, { backgroundColor: C.gold + '22', borderColor: C.gold + '44' }]}>
           <Ionicons name="star" size={11} color={C.gold} />
-          <Text style={[styles.adPillText, { color: C.gold }]}>أبرز خبر</Text>
+          <Text style={[styles.adPillText, { color: C.gold }]}>أبرز الأخبار</Text>
         </View>
       </View>
 
-      <AnimatedCard onPress={() => router.push(`/article/${article._id}`)}>
-        <View style={styles.featuredCard}>
-          {article.imageUrl ? (
-            <Image source={{ uri: article.imageUrl }} style={styles.featuredImage} resizeMode="cover" />
-          ) : (
-            <LinearGradient colors={[C.redDark, C.card]} style={styles.featuredImagePlaceholder}>
-              <Ionicons name="newspaper" size={48} color={C.redLight} />
-            </LinearGradient>
-          )}
-          <MediaBadge hasVideo={!!article.videoUrl} />
-          <LinearGradient
-            colors={['transparent', 'rgba(10,0,0,0.5)', 'rgba(10,0,0,0.97)']}
-            style={styles.featuredOverlay}
-          />
-          <View style={styles.featuredContent}>
-            <View style={[styles.catBadge, { backgroundColor: catColor + '25', borderColor: catColor + '60' }]}>
-              <Text style={[styles.catBadgeText, { color: catColor }]}>{article.category}</Text>
+      <FlatList
+        ref={flatListRef}
+        data={articles}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        onScrollBeginDrag={stopAutoScroll}
+        onScrollEndDrag={startAutoScroll}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }: { item: Article }) => {
+          const catColor = CAT_COLORS[item.category] || C.red;
+          return (
+            <View style={{ width: SCREEN_WIDTH }}>
+              <AnimatedCard onPress={() => router.push(`/article/${item._id}`)}>
+                <View style={styles.featuredCard}>
+                  {item.imageUrl ? (
+                    <Image source={{ uri: item.imageUrl }} style={styles.featuredImage} resizeMode="cover" />
+                  ) : (
+                    <LinearGradient colors={[C.redDark, C.card]} style={styles.featuredImagePlaceholder}>
+                      <Ionicons name="newspaper" size={48} color={C.redLight} />
+                    </LinearGradient>
+                  )}
+                  <MediaBadge hasVideo={!!item.videoUrl} />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(10,0,0,0.5)', 'rgba(10,0,0,0.97)']}
+                    style={styles.featuredOverlay}
+                  />
+                  <View style={styles.featuredContent}>
+                    <View style={[styles.catBadge, { backgroundColor: catColor + '25', borderColor: catColor + '60' }]}>
+                      <Text style={[styles.catBadgeText, { color: catColor }]}>{item.category}</Text>
+                    </View>
+                    <Text style={styles.featuredTitle} numberOfLines={2}>{item.title}</Text>
+                    <Text style={styles.featuredDesc} numberOfLines={2}>{item.description}</Text>
+                    <View style={styles.featuredMeta}>
+                      <View style={styles.metaLeft}>
+                        <Ionicons name="eye-outline" size={13} color={C.textSecondary} />
+                        <Text style={styles.metaText}>{item.views}</Text>
+                      </View>
+                      <Text style={styles.metaDate}>
+                        {new Date(item.createdAt).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </AnimatedCard>
             </View>
-            <Text style={styles.featuredTitle} numberOfLines={2}>{article.title}</Text>
-            <Text style={styles.featuredDesc} numberOfLines={2}>{article.description}</Text>
-            <View style={styles.featuredMeta}>
-              <View style={styles.metaLeft}>
-                <Ionicons name="eye-outline" size={13} color={C.textSecondary} />
-                <Text style={styles.metaText}>{article.views}</Text>
-              </View>
-              <Text style={styles.metaDate}>
-                {new Date(article.createdAt).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </AnimatedCard>
-    </FadeIn>
+          );
+        }}
+      />
+
+      <View style={styles.dotsRow}>
+        {articles.map((_, i) => (
+          <View key={i} style={[styles.dot, i === activeIndex && styles.dotActive]} />
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -406,6 +466,11 @@ function DraggableWhatsApp() {
   const [visible, setVisible] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const pan = useRef(new Animated.ValueXY()).current;
+  const insets = useSafeAreaInsets();
+
+  const fabBottom = Platform.OS === 'android'
+    ? 16 + 64 + insets.bottom  // 64 = tab bar height, insets.bottom = nav bar height
+    : 90;  // keep iOS value unchanged
 
   const panResponder = useRef(
     PanResponder.create({
@@ -449,7 +514,14 @@ function DraggableWhatsApp() {
           </View>
         </FadeIn>
       )}
-      <Animated.View style={[styles.whatsappContainer, { transform: pan.getTranslateTransform() }]} {...panResponder.panHandlers}>
+      <Animated.View
+        style={[
+          styles.whatsappContainer,
+          { bottom: fabBottom },
+          { transform: pan.getTranslateTransform() }
+        ]}
+        {...panResponder.panHandlers}
+      >
         <TouchableOpacity style={styles.fabWhatsApp} activeOpacity={0.8} onPress={() => Linking.openURL('whatsapp://send?phone=+972543854441')}>
           <FontAwesome5 name="whatsapp" size={30} color="#fff" />
         </TouchableOpacity>
@@ -549,7 +621,7 @@ export default function HomeScreen() {
   const fetchData = useCallback(async (reset = false) => {
     try {
       const [artData, adData] = await Promise.all([
-        api.getArticles(1, 6),
+        api.getArticles(1, 12),
         api.getAds(),
       ]);
       setAllArticles(artData.articles);
@@ -586,8 +658,8 @@ export default function HomeScreen() {
   };
 
   const pinnedAd = ads.find(a => a.isPinned && a.isActive);
-  const featuredArticle = allArticles[0];
-  const previewArticles = allArticles.slice(1);
+  const featuredArticles = allArticles.slice(0, 6);
+  const previewArticles = allArticles.slice(6);
 
   if (loading) {
     return (
@@ -667,8 +739,8 @@ export default function HomeScreen() {
         {/* ② PINNED AD */}
         {pinnedAd && <PinnedAdCard ad={pinnedAd} />}
 
-        {/* ③ FEATURED ARTICLE */}
-        {featuredArticle && <FeaturedArticle article={featuredArticle} />}
+        {/* ③ FEATURED SLIDER */}
+        {featuredArticles.length > 0 && <FeaturedSlider articles={featuredArticles} />}
 
         {/* ④ ARTICLES SECTION */}
         {allArticles.length > 1 && (
@@ -883,14 +955,14 @@ const styles = StyleSheet.create({
   videoBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
 
   // ── Featured Article ──
-  featuredWrap: {},
+  sliderWrap: { paddingBottom: 10 },
   featuredCard: {
     marginHorizontal: 16, borderRadius: 20, overflow: 'hidden',
     shadowColor: '#000', shadowRadius: 16, shadowOpacity: 0.5, elevation: 8,
     borderWidth: 1, borderColor: C.cardBorder,
   },
-  featuredImage: { width: '100%', height: IS_WEB ? 220 : H * 0.3 },
-  featuredImagePlaceholder: { width: '100%', height: IS_WEB ? 220 : H * 0.3, alignItems: 'center', justifyContent: 'center' },
+  featuredImage: { width: SCREEN_WIDTH - 32, height: IS_WEB ? 220 : H * 0.3 },
+  featuredImagePlaceholder: { width: SCREEN_WIDTH - 32, height: IS_WEB ? 220 : H * 0.3, alignItems: 'center', justifyContent: 'center' },
   featuredOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '80%' },
   featuredContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, gap: 6, alignItems: 'flex-end' },
   catBadge: {
@@ -904,6 +976,11 @@ const styles = StyleSheet.create({
   metaLeft: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaText: { color: C.textSecondary, fontSize: 12 },
   metaDate: { color: C.textSecondary, fontSize: 12 },
+
+  // ── Slider Dots ──
+  dotsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 12 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#3a1010' },
+  dotActive: { width: 16, backgroundColor: C.gold },
 
   // ── Articles section ──
   articlesSection: { paddingBottom: 8 },
