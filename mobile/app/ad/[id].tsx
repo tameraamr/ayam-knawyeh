@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { api, Ad } from '@/lib/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function FadeDown({ children, delay = 0, style }: { children: React.ReactNode; delay?: number; style?: any }) {
     const anim = useRef(new Animated.Value(0)).current;
@@ -120,6 +121,7 @@ function VideoPlayer({ uri }: { uri: string }) {
 // ── Main screen ─────────────────────────────────────────────────────────────────
 export default function AdDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
+    const insets = useSafeAreaInsets();
     const navigation = useNavigation();
     const router = useRouter();
     const [ad, setAd] = useState<Ad | null>(null);
@@ -188,7 +190,16 @@ export default function AdDetailScreen() {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+            <ScrollView 
+                style={{ flex: 1 }} 
+                contentContainerStyle={{ 
+                    flexGrow: 1, 
+                    paddingBottom: 40,
+                    paddingTop: (!ad.videoUrl && !ad.imageUrl) ? insets.top + 20 : 0
+                }} 
+                showsVerticalScrollIndicator={false} 
+                nestedScrollEnabled={true}
+            >
 
                 {/* ① Hero media */}
                 {ad.videoUrl ? (
@@ -298,7 +309,7 @@ const styles = StyleSheet.create({
     floatingBack: { position: 'absolute', top: IS_WEB ? 14 : 50, right: 16, zIndex: 50 },
     floatingBackBtn: {
         width: 40, height: 40, borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.55)',
+        backgroundColor: 'rgba(0,0,0,0.4)',
         alignItems: 'center', justifyContent: 'center',
     },
 
