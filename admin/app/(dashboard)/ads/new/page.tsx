@@ -20,6 +20,7 @@ export default function NewAdPage() {
     title: '', description: '', content: '',
     imageUrl: '', videoUrl: '', linkUrl: '',
     isPinned: true, isActive: true, order: 0,
+    sendNotification: true,
   });
 
   const set = (key: string, value: unknown) => setForm(prev => ({ ...prev, [key]: value }));
@@ -163,6 +164,10 @@ export default function NewAdPage() {
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={form.isActive} onChange={e => set('isActive', e.target.checked)} className="w-4 h-4 accent-purple-500" />
             <span className="text-gray-200">تفعيل الإعلان فوراً</span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" checked={form.sendNotification} onChange={e => set('sendNotification', e.target.checked)} className="w-4 h-4 accent-purple-500" />
+            <span className="text-gray-200">إرسال إشعار للمستخدمين</span>
           </label>
         </div>
 

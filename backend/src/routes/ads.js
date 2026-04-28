@@ -1,6 +1,8 @@
 const express = require('express');
 const Ad = require('../models/Ad');
 const authMiddleware = require('../middleware/auth');
+const { sendPushNotifications } = require('../services/expoPush');
+const PushToken = require('../models/PushToken');
 
 const router = express.Router();
 
@@ -30,7 +32,27 @@ router.post('/', authMiddleware, async (req, res) => {
     const { title, description, content, imageUrl, videoUrl, linkUrl, isPinned, isActive, order } = req.body;
 
     const ad = await Ad.create({ title, description, content, imageUrl, videoUrl, linkUrl, isPinned, isActive, order: order || 0 });
+    
     res.status(201).json({ ad });
+
+    // Send push notification to all subscribers if requested
+    if (req.body.sendNotification) {
+      try {
+        const tokenDocs = await PushToken.find({ active: true });
+        const tokens = tokenDocs.map(doc => doc.token);
+        if (tokens.length > 0) {
+          await sendPushNotifications(
+            tokens,
+            '📢 ' + ad.title,
+            ad.description || 'إعلان جديد',
+            { adId: ad._id.toString() }
+          );
+          console.log(`📨 Ad notification sent to ${tokens.length} devices`);
+        }
+      } catch (notifErr) {
+        console.error('Ad notification error:', notifErr);
+      }
+    }
   } catch (err) {
     res.status(500).json({ error: 'خطأ في إنشاء الإعلان' });
   }
