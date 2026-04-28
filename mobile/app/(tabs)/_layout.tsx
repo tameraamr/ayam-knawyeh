@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const C = {
   bg: '#0c0101', card: '#1e0808', cardBorder: '#3a1010',
@@ -13,6 +14,8 @@ import * as Updates from 'expo-updates';
 import { I18nManager } from 'react-native';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   // Ensure RTL is enforced in tabs
   if (!I18nManager.isRTL && !__DEV__) {
     I18nManager.allowRTL(true);
@@ -24,7 +27,12 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarShowLabel: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            bottom: Platform.OS === 'ios' ? 24 : 16 + insets.bottom,
+          }
+        ],
         tabBarItemStyle: { justifyContent: 'center', alignItems: 'center', paddingTop: Platform.OS === 'android' ? 10 : 14 },
         headerStyle: { backgroundColor: C.bg, borderBottomWidth: 1, borderBottomColor: C.cardBorder, shadowOpacity: 0, elevation: 0 },
         headerTintColor: C.gold,
@@ -61,7 +69,6 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 24 : 16,
     left: 24,
     right: 24,
     height: 64,

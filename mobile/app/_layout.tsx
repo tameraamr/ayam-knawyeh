@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { I18nManager } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Audio } from 'expo-av';
 import { registerForPushNotifications } from '@/lib/notifications';
 
@@ -35,27 +36,29 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="light" backgroundColor="#0c0101" />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: '#0c0101' },
-          headerTintColor: '#f9fafb',
-          headerTitleStyle: { fontWeight: '700' },
-          contentStyle: { backgroundColor: '#0c0101' },
-          animation: 'slide_from_right',
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="article/[id]"
-          options={{
-            title: '',
-            headerBackTitle: 'رجوع',
-            headerStyle: { backgroundColor: '#111827' },
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar style="light" backgroundColor="#0c0101" />
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: '#0c0101' },
+            headerTintColor: '#f9fafb',
+            headerTitleStyle: { fontWeight: '700' },
+            contentStyle: { backgroundColor: '#0c0101' },
+            animation: 'slide_from_right',
           }}
-        />
-      </Stack>
-    </GestureHandlerRootView>
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="article/[id]"
+            options={{
+              title: '',
+              headerBackTitle: 'رجوع',
+              headerStyle: { backgroundColor: '#111827' },
+            }}
+          />
+        </Stack>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }
