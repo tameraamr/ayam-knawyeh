@@ -659,7 +659,7 @@ export default function HomeScreen() {
 
   const pinnedAd = ads.find(a => a.isPinned && a.isActive);
   const featuredArticles = allArticles.slice(0, 6);
-  const previewArticles = allArticles.slice(6);
+  const previewArticles = allArticles;
 
   if (loading) {
     return (
