@@ -148,12 +148,12 @@ function SocialFooter() {
           <FontAwesome5 name="instagram" size={14} color={C.gold} />
           <Text style={styles.footerBtnLabel}>Instagram</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerBtn} onPress={() => openSocialLink('tiktok://@aeamknaweah', 'https://tiktok.com/@aeamknaweah')}>
+        <TouchableOpacity style={styles.footerBtn} onPress={() => openSocialLink('tiktok://@ayamknaweyh', 'https://tiktok.com/@ayamknaweyh')}>
           <FontAwesome5 name="tiktok" size={13} color={C.gold} />
           <Text style={styles.footerBtnLabel}>TikTok</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.footerCopy}>© 2025 أيام كناوية — جميع الحقوق محفوظة</Text>
+      <Text style={styles.footerCopy}>© 2026 أيام كناوية — جميع الحقوق محفوظة</Text>
       <TouchableOpacity onPress={() => Linking.openURL('https://tamer-omar.com')} style={styles.poweredByBtn}>
         <Text style={styles.poweredByText}>
           Powered by <Text style={{ color: C.gold, fontWeight: 'bold' }}>Tamer Omar</Text>

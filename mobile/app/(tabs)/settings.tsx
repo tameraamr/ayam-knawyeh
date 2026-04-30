@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image } 
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 
-const API_BASE = __DEV__ 
+const API_BASE = __DEV__
   ? (process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000')
   : 'https://ayam-knawyeh-production.up.railway.app';
 
@@ -54,7 +54,7 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      <Text style={styles.footer}>جميع الحقوق محفوظة © 2025 ايام كناوية</Text>
+      <Text style={styles.footer}>جميع الحقوق محفوظة © 2026 ايام كناوية</Text>
     </ScrollView>
   );
 }
