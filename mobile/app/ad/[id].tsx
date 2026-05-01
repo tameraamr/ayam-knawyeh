@@ -272,7 +272,7 @@ export default function AdDetailScreen() {
                         {[
                             { icon: 'facebook-f', label: 'Facebook', url: 'https://facebook.com/kanna.days', appUrl: 'fb://facewebmodal/f?href=https://facebook.com/kanna.days' },
                             { icon: 'instagram', label: 'Instagram', url: 'https://instagram.com/ayam.knawyeh', appUrl: 'instagram://user?username=ayam.knawyeh' },
-                            { icon: 'tiktok', label: 'TikTok', url: 'https://tiktok.com/@aeamknaweah', appUrl: 'tiktok://@aeamknaweah' },
+                            { icon: 'tiktok', label: 'TikTok', url: 'https://tiktok.com/@ayamknaweyh', appUrl: 'tiktok://@ayamknaweyh' },
                         ].map(s => (
                             <TouchableOpacity key={s.label} style={styles.footerBtn} onPress={async () => {
                                 try {
