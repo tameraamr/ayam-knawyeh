@@ -79,7 +79,14 @@ export default function TipTapEditor({ content, onChange, onImageUpload }: TipTa
           for (const file of Array.from(files)) {
             try {
               const url = await onImageUpload(file);
-              editor.chain().focus().setImage({ src: url }).run();
+              // Use insertContent to avoid replacing selection and automatically move cursor
+              editor.chain()
+                .focus()
+                .insertContent([
+                  { type: 'image', attrs: { src: url } },
+                  { type: 'paragraph' }
+                ])
+                .run();
             } catch (err) {
               console.error('Image upload failed', err);
             }
