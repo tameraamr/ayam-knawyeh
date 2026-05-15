@@ -964,7 +964,7 @@ const styles = StyleSheet.create({
   adImage: { width: '100%', height: IS_WEB ? 200 : H * 0.27 },
   adImagePlaceholder: { width: '100%', height: IS_WEB ? 200 : H * 0.27, alignItems: 'center', justifyContent: 'center' },
   adOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '70%' },
-  adOverlayContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16 },
+  adOverlayContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, alignItems: 'flex-end' },
   adTitle: { color: '#fff', fontSize: 17, fontWeight: '800', textAlign: 'right', marginBottom: 4 },
   adDesc: { color: 'rgba(255,255,255,0.75)', fontSize: 12, textAlign: 'right' },
 
@@ -1025,7 +1025,7 @@ const styles = StyleSheet.create({
 
   // ── Article Row ──
   articleRow: {
-    flexDirection: 'row', alignItems: 'center',
+    flexDirection: 'row-reverse', alignItems: 'center',
     gap: 12, paddingVertical: 12, paddingHorizontal: 12,
     borderBottomWidth: 1, borderBottomColor: C.cardBorder,
   },
@@ -1037,7 +1037,7 @@ const styles = StyleSheet.create({
   catBadgeSmall: { alignSelf: 'flex-end', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   catBadgeSmallText: { fontSize: 10, fontWeight: '700' },
   articleTitle: { color: C.textPrimary, fontSize: 13, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl', lineHeight: 20, width: '100%' },
-  articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
+  articleMeta: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, justifyContent: 'flex-start' },
   articleMetaText: { color: C.textMuted, fontSize: 11, textAlign: 'right', writingDirection: 'rtl' },
 
   // ── See All ──
