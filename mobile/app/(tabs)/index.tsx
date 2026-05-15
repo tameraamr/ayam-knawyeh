@@ -3,7 +3,7 @@ import {
   Dimensions, StatusBar, Linking, ActivityIndicator,
   RefreshControl, Platform, Animated, PanResponder, Pressable,
   Alert, TextInput, Modal, SafeAreaView, KeyboardAvoidingView,
-  FlatList
+  FlatList, AppState, AppStateStatus
 } from 'react-native';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'expo-router';
@@ -637,6 +637,29 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => { fetchData(); }, []);
+
+  // ─── AppState listener ──────────────────────────────────────────────────────
+  // When the user brings the app to the foreground, if articles are empty
+  // (meaning the cache gave us a bad empty response), auto-refresh.
+  const appState = useRef<AppStateStatus>(AppState.currentState);
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        // App came to foreground — re-fetch if the list looks empty
+        setAllArticles(prev => {
+          if (prev.length === 0) {
+            fetchData();
+          }
+          return prev;
+        });
+      }
+      appState.current = nextAppState;
+    });
+    return () => subscription.remove();
+  }, [fetchData]);
 
   const handleRefresh = () => { setRefreshing(true); setPage(2); fetchData(true); };
 

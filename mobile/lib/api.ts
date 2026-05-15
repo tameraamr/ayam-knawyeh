@@ -61,12 +61,41 @@ function fixUrl(url?: string): string | undefined {
   return url;
 }
 
+// ─── Retry helper ─────────────────────────────────────────────────────────────
+// Retries a fetch call up to `retries` times with a delay between attempts.
+// This handles the case where the server or a network proxy returns an
+// empty/error response on the first try (e.g. edge-cache glitch).
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit = {},
+  retries = 3,
+  delayMs = 2000
+): Promise<Response> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, options);
+      // Treat a successful HTTP response as a success regardless of body
+      if (res.ok) return res;
+      // On the last attempt, return the failing response so the caller can throw
+      if (attempt === retries) return res;
+    } catch (err) {
+      if (attempt === retries) throw err;
+    }
+    // Wait before retrying
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+  // Should never be reached, but TypeScript needs a return
+  return fetch(url, options);
+}
+
 export const api = {
   getArticles: async (page = 1, limit = 10, category?: string, search?: string): Promise<{ articles: Article[]; pagination: Pagination }> => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (category) params.set('category', category);
     if (search) params.set('search', search);
-    const res = await fetch(`${API_BASE}/api/articles?${params}`);
+    // _t busts any network/CDN cache that may have saved an old empty response
+    params.set('_t', String(Date.now()));
+    const res = await fetchWithRetry(`${API_BASE}/api/articles?${params}`);
     if (!res.ok) throw new Error('فشل جلب الأخبار');
     const data = await res.json();
     data.articles = data.articles.map((a: Article) => ({
@@ -79,7 +108,7 @@ export const api = {
   },
 
   getArticle: async (id: string): Promise<{ article: Article }> => {
-    const res = await fetch(`${API_BASE}/api/articles/${id}`);
+    const res = await fetchWithRetry(`${API_BASE}/api/articles/${id}?_t=${Date.now()}`);
     if (!res.ok) throw new Error('فشل جلب الخبر');
     const data = await res.json();
     data.article.imageUrl = fixUrl(data.article.imageUrl);
@@ -89,7 +118,7 @@ export const api = {
   },
 
   getAds: async (): Promise<{ ads: Ad[] }> => {
-    const res = await fetch(`${API_BASE}/api/ads`);
+    const res = await fetchWithRetry(`${API_BASE}/api/ads?_t=${Date.now()}`);
     if (!res.ok) throw new Error('فشل جلب الإعلانات');
     const data = await res.json();
     data.ads = data.ads.map((a: Ad) => ({
