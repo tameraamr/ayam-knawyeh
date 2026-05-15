@@ -71,14 +71,18 @@ export default function TipTapEditor({ content, onChange, onImageUpload }: TipTa
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
+      input.multiple = true;
       input.onchange = async (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (file) {
-          try {
-            const url = await onImageUpload(file);
-            editor.chain().focus().setImage({ src: url }).run();
-          } catch (err) {
-            console.error('Image upload failed', err);
+        const files = (e.target as HTMLInputElement).files;
+        if (files && files.length > 0) {
+          // Process all selected files
+          for (const file of Array.from(files)) {
+            try {
+              const url = await onImageUpload(file);
+              editor.chain().focus().setImage({ src: url }).run();
+            } catch (err) {
+              console.error('Image upload failed', err);
+            }
           }
         }
       };
