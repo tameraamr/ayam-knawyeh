@@ -35,10 +35,13 @@ export default function SettingsScreen() {
       </View>
 
       {/* Contact */}
+      {/* Contact */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>تواصل معنا</Text>
         <View style={styles.card}>
-          <ClickableRow icon="mail-outline" label="tameraamr@gmail.com" onPress={() => Linking.openURL('mailto:tameraamr@gmail.com')} />
+          <ClickableRow icon="mail-outline" label="mohammadaboallotfe@gmail.com" onPress={() => Linking.openURL('mailto:mohammadaboallotfe@gmail.com')} />
+          <View style={styles.divider} />
+          <ClickableRow icon="logo-whatsapp" label="+972 054-385-4441" onPress={() => Linking.openURL('https://wa.me/972543854441')} />
           <View style={styles.divider} />
           <ClickableRow icon="call-outline" label="صفحة الاتصال" onPress={() => Linking.openURL(`${FRONTEND_URL}/contact`)} />
         </View>
