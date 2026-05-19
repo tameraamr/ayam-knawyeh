@@ -34,6 +34,16 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Contact */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>تواصل معنا</Text>
+        <View style={styles.card}>
+          <ClickableRow icon="mail-outline" label="tameraamr@gmail.com" onPress={() => Linking.openURL('mailto:tameraamr@gmail.com')} />
+          <View style={styles.divider} />
+          <ClickableRow icon="call-outline" label="صفحة الاتصال" onPress={() => Linking.openURL(`${FRONTEND_URL}/contact`)} />
+        </View>
+      </View>
+
       {/* About */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>عن التطبيق</Text>
