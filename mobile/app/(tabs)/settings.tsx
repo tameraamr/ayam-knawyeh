@@ -34,18 +34,7 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* Contact */}
-      {/* Contact */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>تواصل معنا</Text>
-        <View style={styles.card}>
-          <ClickableRow icon="mail-outline" label="mohammadaboallotfe@gmail.com" onPress={() => Linking.openURL('mailto:mohammadaboallotfe@gmail.com')} />
-          <View style={styles.divider} />
-          <ClickableRow icon="logo-whatsapp" label="+972 054-385-4441" onPress={() => Linking.openURL('https://wa.me/972543854441')} />
-          <View style={styles.divider} />
-          <ClickableRow icon="call-outline" label="صفحة الاتصال" onPress={() => Linking.openURL(`${FRONTEND_URL}/contact`)} />
-        </View>
-      </View>
+
 
       {/* About */}
       <View style={styles.section}>
@@ -59,8 +48,10 @@ export default function SettingsScreen() {
 
       {/* Legal */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>القانونية</Text>
+        <Text style={styles.sectionTitle}>القانونية والتواصل</Text>
         <View style={styles.card}>
+          <ClickableRow icon="call-outline" label="اتصل بنا" onPress={() => Linking.openURL(`${FRONTEND_URL}/contact`)} />
+          <View style={styles.divider} />
           <ClickableRow icon="shield-checkmark-outline" label="سياسة الخصوصية" onPress={() => Linking.openURL(`${FRONTEND_URL}/privacy`)} />
           <View style={styles.divider} />
           <ClickableRow icon="document-text-outline" label="شروط الاستخدام" onPress={() => Linking.openURL(`${FRONTEND_URL}/terms`)} />
