@@ -7,6 +7,7 @@
 ## 📋 Table of Contents
 
 - [Project Overview](#-project-overview)
+- [Mobile App Screenshots](#-mobile-app-screenshots)
 - [Architecture](#-architecture)
 - [Tech Stack & Skills](#-tech-stack--skills)
   - [Mobile App (React Native / Expo)](#mobile-app--react-native--expo)
@@ -31,6 +32,16 @@
 **Ayam Knawyeh (أيام كناوية)** is a full-stack, Arabic-first local news and community platform. It was designed from the ground up to serve a regional Arabic-speaking audience with a native mobile experience on both Android and iOS, a web-based content management system for journalists, and a cloud-powered API backend.
 
 The project is structured as a **monorepo** containing three independently deployable applications that share a common API contract.
+
+<br/>
+
+---
+
+## 📸 Mobile App Screenshots
+
+| Home Feed & Ads | Latest News Feed | Categories & Notices | Search Interface | App Settings |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="assets/screenshots/home_screen.png" width="160" alt="Home Feed & Ads" /> | <img src="assets/screenshots/news_feed.png" width="160" alt="Latest News Feed" /> | <img src="assets/screenshots/categories.png" width="160" alt="Categories & Notices" /> | <img src="assets/screenshots/search.png" width="160" alt="Search Interface" /> | <img src="assets/screenshots/settings.png" width="160" alt="App Settings" /> |
 
 <br/>
 
