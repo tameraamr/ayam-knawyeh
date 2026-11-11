@@ -1,87 +1,64 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, fonts, TAB_BAR_HEIGHT } from '@/theme';
 
-const C = {
-  bg: '#0c0101', card: '#1e0808', cardBorder: '#3a1010',
-  red: '#c8102e', redDark: '#8b0000', gold: '#d4af37',
-  goldLight: '#f0d060', textPrimary: '#f5ede0',
-  textSecondary: '#a08878', textMuted: '#5a3a3a',
-};
+// RTL is forced once in app/_layout.tsx (with a reload), so it isn't repeated here.
 
-import * as Updates from 'expo-updates';
-import { I18nManager } from 'react-native';
+type IconName = React.ComponentProps<typeof Ionicons>['name'];
+const tabIcon = (active: IconName, inactive: IconName) =>
+  ({ focused, color }: { focused: boolean; color: string }) =>
+    <Ionicons name={focused ? active : inactive} size={23} color={color} />;
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
 
-  // Ensure RTL is enforced in tabs
-  if (!I18nManager.isRTL && !__DEV__) {
-    I18nManager.allowRTL(true);
-    I18nManager.forceRTL(true);
-    Updates.reloadAsync();
-  }
-
   return (
     <Tabs
       screenOptions={{
-        tabBarShowLabel: false,
-        tabBarStyle: [
-          styles.tabBar,
-          {
-            bottom: Platform.OS === 'ios' ? 24 : 16 + insets.bottom,
-          }
-        ],
-        tabBarItemStyle: { justifyContent: 'center', alignItems: 'center', paddingTop: Platform.OS === 'android' ? 10 : 14 },
-        headerStyle: { backgroundColor: C.bg, borderBottomWidth: 1, borderBottomColor: C.cardBorder, shadowOpacity: 0, elevation: 0 },
-        headerTintColor: C.gold,
-        headerTitleStyle: { fontWeight: '800', fontSize: 18 },
+        // Labels under the icons: easier for everyone, especially older readers.
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: colors.masthead,
+        tabBarInactiveTintColor: colors.soft,
+        tabBarLabelStyle: { fontFamily: fonts.semibold, fontSize: 11.5, marginTop: 2 },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.line,
+          borderTopWidth: 1,
+          height: TAB_BAR_HEIGHT + insets.bottom,
+          paddingTop: 6,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+        },
+        headerStyle: { backgroundColor: colors.masthead },
+        headerShadowVisible: false,
+        headerTintColor: colors.onMasthead,
+        headerTitleStyle: { fontFamily: fonts.bold, fontSize: 18 },
         headerTitleAlign: 'center',
+        sceneStyle: { backgroundColor: colors.page },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'أيام كناوية',
+          title: 'الرئيسية',
           headerShown: false,
-          tabBarIcon: ({ focused }) => <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={focused ? C.gold : C.textSecondary} />,
+          tabBarIcon: tabIcon('home', 'home-outline'),
         }}
       />
       <Tabs.Screen
         name="categories"
         options={{
           title: 'التصنيفات',
-          tabBarIcon: ({ focused }) => <Ionicons name={focused ? 'grid' : 'grid-outline'} size={24} color={focused ? C.gold : C.textSecondary} />,
+          tabBarIcon: tabIcon('grid', 'grid-outline'),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'الإعدادات',
-          tabBarIcon: ({ focused }) => <Ionicons name={focused ? 'settings' : 'settings-outline'} size={24} color={focused ? C.gold : C.textSecondary} />,
+          tabBarIcon: tabIcon('settings', 'settings-outline'),
         }}
       />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  tabBar: {
-    position: 'absolute',
-    left: 24,
-    right: 24,
-    height: 64,
-    paddingBottom: 0, // Overrides safe area insets that push icons up
-    paddingTop: 0,
-    backgroundColor: '#1a0505',
-    borderWidth: 1,
-    borderColor: '#3a1010',
-    borderRadius: 32,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 15,
-  }
-});

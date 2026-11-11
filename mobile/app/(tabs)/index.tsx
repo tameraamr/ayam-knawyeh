@@ -1,12 +1,12 @@
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,
-  Dimensions, StatusBar, Linking, ActivityIndicator,
-  RefreshControl, Platform, Animated, PanResponder, Pressable,
-  Alert, TextInput, Modal, SafeAreaView, KeyboardAvoidingView,
-  FlatList
+  View, Text, ScrollView, StyleSheet, Pressable, Image,
+  Dimensions, Linking, ActivityIndicator, RefreshControl, Platform,
+  Animated, Alert, TextInput, Modal, KeyboardAvoidingView, FlatList,
+  type NativeSyntheticEvent, type NativeScrollEvent,
 } from 'react-native';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,526 +17,303 @@ import {
   showNotificationPermissionAlert,
 } from '@/lib/notificationPrefs';
 import { formatRelativeDate, formatArabicDate } from '@/lib/date';
+import { colors, fonts, radius, spacing, type } from '@/theme';
+import { ArticleRow } from '@/components/ArticleRow';
+import { CategoryChip } from '@/components/CategoryChip';
 
-// Simple fade-in wrapper using built-in Animated
-function FadeIn({ children, delay = 0, style }: { children: React.ReactNode; delay?: number; style?: any }) {
-  const anim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(anim, { toValue: 1, duration: 400, delay, useNativeDriver: true }).start();
-  }, []);
-  return (
-    <Animated.View style={[{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }, style]}>
-      {children}
-    </Animated.View>
-  );
-}
-
-const { width: W, height: H } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const IS_WEB = Platform.OS === 'web';
+const SIDE = spacing.md;                       // screen edge padding
+const CARD_WIDTH = SCREEN_WIDTH - SIDE * 2;
+const MEDIA_HEIGHT = IS_WEB ? 220 : Math.round(SCREEN_HEIGHT * 0.27);
+const CAROUSEL_COUNT = 5;
+const WHATSAPP_NUMBER = '+972543854441';
 
-// ─── Design Tokens ───────────────────────────────────────────────────────────
-const C = {
-  bg: '#0c0101',
-  surface: '#180505',
-  card: '#1e0808',
-  cardBorder: '#3a1010',
-  red: '#c8102e',
-  redDark: '#8b0000',
-  redLight: '#e63d3d',
-  gold: '#d4af37',
-  goldLight: '#f0d060',
-  goldDark: '#a07c10',
-  textPrimary: '#f5ede0',
-  textSecondary: '#a08878',
-  textMuted: '#5a3a3a',
-};
-
-// ─── Shimmer / Pulse for loading ─────────────────────────────────────────────
-function PulseCard({ h = 200 }: { h?: number }) {
-  const opacity = useRef(new Animated.Value(0.3)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.7, duration: 800, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-  return (
-    <Animated.View style={{ height: h, borderRadius: 20, backgroundColor: C.card, marginHorizontal: 16, marginBottom: 14, opacity }} />
-  );
-}
-
-// ─── Banner Header (Modern Layout) ─────────────────────────────────────────────
-function HeroBanner({
+// ─── Masthead: crimson band with the gold logo, like the front page of a paper ──
+function Masthead({
   onSearchPress,
   notificationsEnabled,
-  onToggleNotifications
+  onToggleNotifications,
 }: {
-  onSearchPress: () => void,
-  notificationsEnabled: boolean,
-  onToggleNotifications: () => void
+  onSearchPress: () => void;
+  notificationsEnabled: boolean;
+  onToggleNotifications: () => void;
 }) {
-  // ar-EG-u-nu-latn forces international numbers (1, 2, 3) but keeps Arabic language (أبريل, الخميس)
-  const dateStr = formatArabicDate(new Date(), {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
+  const insets = useSafeAreaInsets();
+  const weekday = formatArabicDate(new Date(), { weekday: 'long' });
+  const date = formatArabicDate(new Date(), { day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <FadeIn delay={0}>
-      <View style={styles.modernBanner}>
-        <View style={styles.bannerRow}>
+    <View style={[styles.masthead, { paddingTop: insets.top + (IS_WEB ? 12 : 4) }]}>
+      <View style={styles.mastRow}>
+        {/* Right (RTL start): date */}
+        <View style={styles.mastSide}>
+          <Text style={styles.mastWeekday}>{weekday}</Text>
+          <Text style={styles.mastDate}>{date}</Text>
+        </View>
 
-          {/* Right: Date (Standard Arabic Right-Side) */}
-          <View style={styles.bannerRight}>
-            <Text style={styles.bannerDateText}>{dateStr.replace('،', '\n')}</Text>
-          </View>
+        {/* Centre: logo */}
+        <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
 
-          {/* Center: Huge Logo */}
-          <View style={styles.bannerCenter}>
-            <Image
-              source={require('../../assets/logo.png')}
-              style={styles.modernLogo}
-              resizeMode="contain"
+        {/* Left (RTL end): actions */}
+        <View style={[styles.mastSide, styles.mastActions]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={notificationsEnabled ? 'إيقاف الإشعارات' : 'تفعيل الإشعارات'}
+            onPress={onToggleNotifications}
+            style={({ pressed }) => [styles.mastBtn, pressed && styles.mastBtnPressed]}
+          >
+            <Ionicons
+              name={notificationsEnabled ? 'notifications' : 'notifications-off-outline'}
+              size={19}
+              color={colors.onMasthead}
             />
-          </View>
-
-          {/* Left: Actions (Standard Arabic Left-Side) */}
-          <View style={styles.bannerLeft}>
-            <TouchableOpacity style={styles.bannerLeftBtn} activeOpacity={0.7} onPress={onToggleNotifications}>
-              <Ionicons name={notificationsEnabled ? "notifications" : "notifications-off"} size={20} color={notificationsEnabled ? C.goldLight : C.textMuted} />
-              {notificationsEnabled && <View style={styles.notificationDot} />}
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.bannerLeftBtn} activeOpacity={0.7} onPress={onSearchPress}>
-              <Ionicons name="search" size={20} color={C.textPrimary} />
-            </TouchableOpacity>
-          </View>
-
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="بحث"
+            onPress={onSearchPress}
+            style={({ pressed }) => [styles.mastBtn, pressed && styles.mastBtnPressed]}
+          >
+            <Ionicons name="search" size={19} color={colors.onMasthead} />
+          </Pressable>
         </View>
       </View>
-    </FadeIn>
-  );
-}
-
-const openSocialLink = async (appUrl: string, webUrl: string) => {
-  try {
-    const supported = await Linking.canOpenURL(appUrl);
-    if (supported) {
-      await Linking.openURL(appUrl);
-    } else {
-      await Linking.openURL(webUrl);
-    }
-  } catch (error) {
-    Linking.openURL(webUrl);
-  }
-};
-
-// ─── Social Footer ─────────────────────────────────────────────────────
-function SocialFooter() {
-  return (
-    <View style={styles.footer}>
-      <LinearGradient
-        colors={['transparent', C.gold + '40', 'transparent']}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-        style={{ height: 1, marginBottom: 16 }}
-      />
-      <View style={styles.footerSocial}>
-        <TouchableOpacity style={styles.footerBtn} onPress={() => openSocialLink('fb://facewebmodal/f?href=https://facebook.com/kanna.days2', 'https://facebook.com/kanna.days2')}>
-          <FontAwesome5 name="facebook-f" size={14} color={C.gold} />
-          <Text style={styles.footerBtnLabel}>Facebook</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerBtn} onPress={() => openSocialLink('instagram://user?username=ayam.knawyeh', 'https://instagram.com/ayam.knawyeh')}>
-          <FontAwesome5 name="instagram" size={14} color={C.gold} />
-          <Text style={styles.footerBtnLabel}>Instagram</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerBtn} onPress={() => openSocialLink('tiktok://@ayamknaweyh', 'https://tiktok.com/@ayamknaweyh')}>
-          <FontAwesome5 name="tiktok" size={13} color={C.gold} />
-          <Text style={styles.footerBtnLabel}>TikTok</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.footerCopy}>© 2026 أيام كناوية — جميع الحقوق محفوظة</Text>
-      <TouchableOpacity onPress={() => Linking.openURL('https://tamer-omar.com')} style={styles.poweredByBtn}>
-        <Text style={styles.poweredByText}>
-          Powered by <Text style={{ color: C.gold, fontWeight: 'bold' }}>Tamer Omar</Text>
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 }
 
-// ─── Media badge (video or image) ─────────────────────────────────────────────
-function MediaBadge({ hasVideo }: { hasVideo: boolean }) {
-  if (!hasVideo) return null;
+// ─── Section title: text on the right, a hairline filling the rest ─────────────
+function SectionTitle({ title }: { title: string }) {
   return (
-    <View style={styles.videoBadge}>
-      <Ionicons name="play-circle" size={12} color="#fff" />
-      <Text style={styles.videoBadgeText}>فيديو</Text>
+    <View style={styles.sectionRow}>
+      <Text style={type.section}>{title}</Text>
+      <View style={styles.sectionLine} />
     </View>
   );
 }
 
-// ─── Video Preview ────────────────────────────────────────────────────────────
-function VideoPreview({ uri }: { uri: string }) {
+// ─── Muted looping video (ads and carousel items with a video) ────────────────
+function VideoPreview({ uri, height }: { uri: string; height: number }) {
   if (IS_WEB) {
     return (
-      // @ts-ignore
-      <video src={uri} autoPlay loop muted playsInline style={{ width: '100%', height: IS_WEB ? 200 : H * 0.27, objectFit: 'cover', display: 'block' }} />
+      // @ts-ignore — plain <video> on web
+      <video src={uri} autoPlay loop muted playsInline style={{ width: '100%', height, objectFit: 'cover', display: 'block' }} />
     );
   }
   const { Video, ResizeMode } = require('expo-av');
+  return <Video source={{ uri }} style={{ width: '100%', height }} resizeMode={ResizeMode.COVER} shouldPlay isLooping isMuted />;
+}
+
+function VideoBadge() {
   return (
-    <Video
-      source={{ uri }}
-      style={{ width: '100%', height: H * 0.27 }}
-      resizeMode={ResizeMode.COVER}
-      shouldPlay
-      isLooping
-      isMuted
-    />
+    <View style={styles.videoBadge}>
+      <Ionicons name="play" size={11} color={colors.white} />
+      <Text style={[type.label, { color: colors.white }]}>فيديو</Text>
+    </View>
   );
 }
 
-// ─── Animated Card Wrapper ───────────────────────────────────────────────────
-function AnimatedCard({ children, onPress, style }: { children: React.ReactNode; onPress: () => void; style?: any }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        style,
-        {
-          transform: [{ scale: pressed ? 0.97 : 1 }],
-          opacity: pressed ? 0.9 : 1,
-        }
-      ]}
-    >
-      {children}
-    </Pressable>
-  );
-}
-
-// ─── Pinned Ad Card ────────────────────────────────────────────────────────────
+// ─── ① Pinned ad: always first on the page ────────────────────────────────────
 function PinnedAdCard({ ad }: { ad: Ad }) {
   const router = useRouter();
-
   return (
-    <FadeIn delay={100} style={styles.pinnedAdWrap}>
-      {/* Label */}
-      <View style={styles.sectionLabelRow}>
-        <LinearGradient colors={[C.red, C.redLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.sectionLabelBar} />
-        <View style={styles.adPill}>
-          <Ionicons name="megaphone" size={11} color={C.gold} />
-          <Text style={styles.adPillText}>إعلان مميز</Text>
-        </View>
-      </View>
-
-      <AnimatedCard style={styles.adCard} onPress={() => router.push(`/ad/${ad._id}` as any)}>
-        {/* Media */}
-        <View style={styles.adImageWrap}>
-          {ad.videoUrl ? (
-            <VideoPreview uri={ad.videoUrl} />
-          ) : ad.imageUrl ? (
-            <Image source={{ uri: ad.imageUrl }} style={styles.adImage} resizeMode="cover" />
-          ) : (
-            <LinearGradient colors={[C.redDark, C.card]} style={styles.adImagePlaceholder}>
-              <Ionicons name="megaphone" size={42} color={C.redLight} />
-            </LinearGradient>
-          )}
-          <MediaBadge hasVideo={!!ad.videoUrl} />
-          <LinearGradient
-            colors={['transparent', 'rgba(10,0,0,0.6)', 'rgba(10,0,0,0.95)']}
-            style={styles.adOverlay}
-          />
-          <View style={styles.adOverlayContent}>
-            <Text style={styles.adTitle} numberOfLines={2}>{ad.title}</Text>
-            {ad.description ? (
-              <Text style={styles.adDesc} numberOfLines={2}>{ad.description}</Text>
-            ) : null}
+    <View style={[styles.block, styles.padded]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`إعلان: ${ad.title}`}
+        onPress={() => router.push(`/ad/${ad._id}` as any)}
+        style={({ pressed }) => [styles.mediaCard, pressed && styles.cardPressed]}
+      >
+        {ad.videoUrl ? (
+          <VideoPreview uri={ad.videoUrl} height={MEDIA_HEIGHT} />
+        ) : ad.imageUrl ? (
+          <Image source={{ uri: ad.imageUrl }} style={styles.media} resizeMode="cover" />
+        ) : (
+          <View style={[styles.media, styles.mediaEmpty]}>
+            <Ionicons name="megaphone-outline" size={40} color={colors.faint} />
           </View>
+        )}
+        <View style={styles.adLabel}>
+          <Ionicons name="megaphone" size={11} color={colors.ink} />
+          <Text style={[type.label, { color: colors.ink }]}>إعلان</Text>
         </View>
-      </AnimatedCard>
-    </FadeIn>
+        {ad.videoUrl ? <VideoBadge /> : null}
+        {ad.title ? (
+          <LinearGradient colors={['transparent', colors.overlay]} style={styles.scrim}>
+            <Text style={styles.onPhotoTitle} numberOfLines={2}>{ad.title}</Text>
+            {ad.description ? <Text style={styles.onPhotoSub} numberOfLines={1}>{ad.description}</Text> : null}
+          </LinearGradient>
+        ) : null}
+      </Pressable>
+    </View>
   );
 }
 
-// ─── Featured Article (latest, hero style) ────────────────────────────────────
-const CAT_COLORS: Record<string, string> = {
-  'اخبار البلد': '#e62020', 'مواليد جدد': '#0ea5e9', 'ابناء كفركنا': '#8b5cf6',
-  'افراح': '#f97316', 'يصادف اليوم': '#eab308', 'محلات تجارية': '#ec4899', 'تنويهات': '#06b6d4',
-};
-
-function FeaturedSlider({ articles }: { articles: Article[] }) {
+// ─── ② Carousel: the 5 latest news, auto-advancing ─────────────────────────────
+function FeaturedCarousel({ articles }: { articles: Article[] }) {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
-  const autoScrollTimer = useRef<any>(null);
+  const listRef = useRef<FlatList<Article>>(null);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const startAutoScroll = () => {
-    stopAutoScroll();
-    if (articles.length <= 1) return;
-    autoScrollTimer.current = setInterval(() => {
-      const nextIndex = (activeIndex + 1) % articles.length;
-      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-    }, 4000);
+  const stop = () => {
+    if (timer.current) clearInterval(timer.current);
+    timer.current = null;
   };
-
-  const stopAutoScroll = () => {
-    if (autoScrollTimer.current) {
-      clearInterval(autoScrollTimer.current);
-      autoScrollTimer.current = null;
-    }
+  const start = () => {
+    stop();
+    if (articles.length <= 1) return;
+    timer.current = setInterval(() => {
+      const next = (activeIndex + 1) % articles.length;
+      listRef.current?.scrollToIndex({ index: next, animated: true });
+    }, 5000);
   };
 
   useEffect(() => {
-    startAutoScroll();
-    return () => stopAutoScroll();
+    start();
+    return stop;
   }, [activeIndex, articles.length]);
 
-  const onScroll = (event: any) => {
-    const scrollOffset = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollOffset / SCREEN_WIDTH);
-    if (index !== activeIndex) {
-      setActiveIndex(index);
-    }
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+    if (index !== activeIndex && index >= 0 && index < articles.length) setActiveIndex(index);
   };
 
   if (articles.length === 0) return null;
 
   return (
-    <View style={styles.sliderWrap}>
-      <View style={styles.sectionLabelRow}>
-        <LinearGradient colors={[C.gold, C.goldLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.sectionLabelBar} />
-        <View style={[styles.adPill, { backgroundColor: C.gold + '22', borderColor: C.gold + '44' }]}>
-          <Ionicons name="star" size={11} color={C.gold} />
-          <Text style={[styles.adPillText, { color: C.gold }]}>أبرز الأخبار</Text>
-        </View>
-      </View>
-
+    <View style={styles.block}>
+      <View style={styles.padded}><SectionTitle title="أبرز الأخبار" /></View>
       <FlatList
-        ref={flatListRef}
+        ref={listRef}
         data={articles}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
-        onScrollBeginDrag={stopAutoScroll}
-        onScrollEndDrag={startAutoScroll}
+        onScrollBeginDrag={stop}
+        onScrollEndDrag={start}
         keyExtractor={(item) => item._id}
-        renderItem={({ item }: { item: Article }) => {
-          const catColor = CAT_COLORS[item.category] || C.red;
-          return (
-            <View style={{ width: SCREEN_WIDTH }}>
-              <AnimatedCard onPress={() => router.push(`/article/${item._id}`)}>
-                <View style={styles.featuredCard}>
-                  {item.imageUrl ? (
-                    <Image source={{ uri: item.imageUrl }} style={styles.featuredImage} resizeMode="cover" />
-                  ) : (
-                    <LinearGradient colors={[C.redDark, C.card]} style={styles.featuredImagePlaceholder}>
-                      <Ionicons name="newspaper" size={48} color={C.redLight} />
-                    </LinearGradient>
-                  )}
-                  <MediaBadge hasVideo={!!item.videoUrl} />
-                  <LinearGradient
-                    colors={['transparent', 'rgba(10,0,0,0.5)', 'rgba(10,0,0,0.97)']}
-                    style={styles.featuredOverlay}
-                  />
-                  <View style={styles.featuredContent}>
-                    <View style={[styles.catBadge, { backgroundColor: catColor + '25', borderColor: catColor + '60' }]}>
-                      <Text style={[styles.catBadgeText, { color: catColor }]}>{item.category}</Text>
-                    </View>
-                    <Text style={styles.featuredTitle} numberOfLines={2}>{item.title}</Text>
-                    <Text style={styles.featuredDesc} numberOfLines={2}>{item.description}</Text>
-                    <View style={styles.featuredMeta}>
-                      <View style={styles.metaLeft}>
-                        <Ionicons name="eye-outline" size={13} color={C.textSecondary} />
-                        <Text style={styles.metaText}>{item.views}</Text>
-                      </View>
-                      <Text style={styles.metaDate}>
-                        {formatRelativeDate(item.createdAt)}
-                      </Text>
-                    </View>
+        getItemLayout={(_, index) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * index, index })}
+        renderItem={({ item }) => (
+          <View style={{ width: SCREEN_WIDTH, paddingHorizontal: SIDE }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={item.title}
+              onPress={() => router.push(`/article/${item._id}`)}
+              style={({ pressed }) => [styles.mediaCard, pressed && styles.cardPressed]}
+            >
+              {item.imageUrl ? (
+                <Image source={{ uri: item.imageUrl }} style={styles.media} resizeMode="cover" />
+              ) : (
+                <View style={[styles.media, styles.mediaEmpty]}>
+                  <Ionicons name="newspaper-outline" size={40} color={colors.faint} />
+                </View>
+              )}
+              {item.videoUrl ? <VideoBadge /> : null}
+              <LinearGradient colors={['transparent', colors.overlay]} style={styles.scrim}>
+                <CategoryChip name={item.category} onPhoto />
+                <Text style={styles.onPhotoTitle} numberOfLines={2}>{item.title}</Text>
+                <View style={styles.onPhotoMeta}>
+                  <Text style={styles.onPhotoMetaText}>{formatRelativeDate(item.createdAt)}</Text>
+                  <View style={styles.inline}>
+                    <Ionicons name="eye-outline" size={12} color={colors.onMastheadSoft} />
+                    <Text style={styles.onPhotoMetaText}>{item.views}</Text>
                   </View>
                 </View>
-              </AnimatedCard>
-            </View>
-          );
-        }}
+              </LinearGradient>
+            </Pressable>
+          </View>
+        )}
       />
-
-      <View style={styles.dotsRow}>
-        {articles.map((_, i) => (
-          <View key={i} style={[styles.dot, i === activeIndex && styles.dotActive]} />
+      <View style={styles.dots}>
+        {articles.map((a, i) => (
+          <View key={a._id} style={[styles.dot, i === activeIndex && styles.dotActive]} />
         ))}
       </View>
     </View>
   );
 }
 
-// ─── Compact Article Row ────────────────────────────────────────────────────────
-function ArticleRow({ article, index }: { article: Article; index: number }) {
-  const router = useRouter();
-  const catColor = CAT_COLORS[article.category] || C.red;
-
-  return (
-    <FadeIn delay={index * 60}>
-      <AnimatedCard
-        style={styles.articleRow}
-        onPress={() => router.push(`/article/${article._id}`)}
-      >
-        {/* Text section (Primary on Right in RTL) */}
-        <View style={styles.articleText}>
-          <View style={[styles.catBadgeSmall, { backgroundColor: catColor + '20' }]}>
-            <Text style={[styles.catBadgeSmallText, { color: catColor }]}>{article.category}</Text>
-          </View>
-          <Text style={styles.articleTitle} numberOfLines={2}>{article.title}</Text>
-          <View style={styles.articleMeta}>
-            <Ionicons name="time-outline" size={11} color={C.textMuted} />
-            <Text style={styles.articleMetaText}>
-              {formatRelativeDate(article.createdAt)}
-            </Text>
-            <Ionicons name="eye-outline" size={11} color={C.textMuted} style={{ marginStart: 8 }} />
-            <Text style={styles.articleMetaText}>{article.views}</Text>
-          </View>
-        </View>
-
-        {/* Thumbnail (Secondary on Left in RTL) */}
-        <View style={styles.thumbWrap}>
-          {article.imageUrl ? (
-            <Image source={{ uri: article.imageUrl }} style={styles.thumb} resizeMode="cover" />
-          ) : (
-            <LinearGradient colors={[C.redDark, C.card]} style={styles.thumbPlaceholder}>
-              <Ionicons name="newspaper-outline" size={22} color={C.textMuted} />
-            </LinearGradient>
-          )}
-          <MediaBadge hasVideo={!!article.videoUrl} />
-          <View style={[styles.thumbCatDot, { backgroundColor: catColor }]} />
-        </View>
-
-        {/* Arrow (Far Left) */}
-        <Ionicons name="chevron-back" size={16} color={C.textMuted} />
-      </AnimatedCard>
-    </FadeIn>
-  );
+// ─── ④ Footer: WhatsApp, socials, credits ─────────────────────────────────────
+async function openSocial(appUrl: string, webUrl: string) {
+  try {
+    if (await Linking.canOpenURL(appUrl)) await Linking.openURL(appUrl);
+    else await Linking.openURL(webUrl);
+  } catch {
+    Linking.openURL(webUrl);
+  }
 }
 
-// ─── Section Header ────────────────────────────────────────────────────────────
-function SectionHeader({ title }: { title: string }) {
+const SOCIALS = [
+  { icon: 'facebook-f', label: 'Facebook', app: 'fb://facewebmodal/f?href=https://facebook.com/kanna.days2', web: 'https://facebook.com/kanna.days2' },
+  { icon: 'instagram', label: 'Instagram', app: 'instagram://user?username=ayam.knawyeh', web: 'https://instagram.com/ayam.knawyeh' },
+  { icon: 'tiktok', label: 'TikTok', app: 'tiktok://@ayamknaweyh', web: 'https://tiktok.com/@ayamknaweyh' },
+];
+
+function Footer() {
   return (
-    <View style={styles.sectionHeader}>
-      <LinearGradient
-        colors={[C.red, 'transparent']}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-        style={styles.sectionLine}
-      />
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <LinearGradient
-        colors={['transparent', C.red]}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-        style={styles.sectionLine}
-      />
+    <View style={[styles.padded, styles.footer]}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => openSocial(`whatsapp://send?phone=${WHATSAPP_NUMBER}`, `https://wa.me/${WHATSAPP_NUMBER.replace('+', '')}`)}
+        style={({ pressed }) => [styles.whatsapp, pressed && { opacity: 0.85 }]}
+      >
+        <FontAwesome5 name="whatsapp" size={20} color={colors.white} />
+        <Text style={[type.button, { color: colors.white }]}>أرسل لنا خبراً عبر واتساب</Text>
+      </Pressable>
+
+      <View style={styles.socialRow}>
+        {SOCIALS.map((s) => (
+          <Pressable
+            key={s.label}
+            accessibilityRole="link"
+            accessibilityLabel={s.label}
+            onPress={() => openSocial(s.app, s.web)}
+            style={({ pressed }) => [styles.socialBtn, pressed && styles.cardPressed]}
+          >
+            <FontAwesome5 name={s.icon as any} size={15} color={colors.masthead} />
+            <Text style={[type.label, { color: colors.ink }]}>{s.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <Text style={[type.meta, styles.center]}>© {new Date().getFullYear()} أيام كناوية · جميع الحقوق محفوظة</Text>
+      <Pressable accessibilityRole="link" onPress={() => Linking.openURL('https://tamer-omar.com')} hitSlop={8}>
+        <Text style={[styles.powered, styles.center]}>
+          Powered by <Text style={styles.poweredName}>Tamer Omar</Text>
+        </Text>
+      </Pressable>
     </View>
   );
 }
 
-// ─── Load More Button ──────────────────────────────────────────────────────────
-function LoadMoreButton({ onPress, loading }: { onPress: () => void; loading: boolean }) {
+// ─── Loading placeholder that keeps the page's shape ──────────────────────────
+function Skeleton() {
+  const opacity = useRef(new Animated.Value(0.5)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0.5, duration: 700, useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, []);
+  const box = (h: number) => <Animated.View style={[styles.skeleton, { height: h, opacity }]} />;
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.seeAllWrap}>
-      <LinearGradient
-        colors={[C.redDark, C.red, C.redLight]}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-        style={styles.seeAllBtn}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" size="small" />
-        ) : (
-          <>
-            <Text style={styles.seeAllText}>عرض المزيد</Text>
-            <Ionicons name="chevron-down" size={16} color="#fff" />
-          </>
-        )}
-      </LinearGradient>
-    </TouchableOpacity>
+    <View style={[styles.padded, { gap: spacing.md, paddingTop: spacing.md }]}>
+      {box(MEDIA_HEIGHT)}
+      {box(MEDIA_HEIGHT)}
+      {box(84)}
+      {box(84)}
+    </View>
   );
 }
 
-// ─── Draggable WhatsApp ─────────────────────────────────────────────────────────
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
-
-function DraggableWhatsApp() {
-  const [visible, setVisible] = useState(true);
-  const [isDragging, setIsDragging] = useState(false);
-  const pan = useRef(new Animated.ValueXY()).current;
-  const insets = useSafeAreaInsets();
-
-  const fabBottom = Platform.OS === 'android'
-    ? 16 + 64 + insets.bottom  // 64 = tab bar height, insets.bottom = nav bar height
-    : 90;  // keep iOS value unchanged
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (e, gestureState) => {
-        // Only trigger drag if moved more than 5 pixels (allows normal taps to work)
-        return Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5;
-      },
-      onPanResponderGrant: () => {
-        pan.setOffset({ x: (pan.x as any)._value, y: (pan.y as any)._value });
-        pan.setValue({ x: 0, y: 0 });
-        setIsDragging(true);
-      },
-      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
-      onPanResponderRelease: (e, gesture) => {
-        pan.flattenOffset();
-        setIsDragging(false);
-
-        // Check if dragged to the bottom center dropzone
-        if (gesture.moveY > SCREEN_HEIGHT - 160 && gesture.moveX > SCREEN_WIDTH / 2 - 80 && gesture.moveX < SCREEN_WIDTH / 2 + 80) {
-          // Snap down and hide
-          Animated.timing(pan, { toValue: { x: gesture.dx, y: gesture.dy + 200 }, duration: 250, useNativeDriver: false }).start(() => setVisible(false));
-        } else {
-          // Snap back to origin perfectly
-          Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false, friction: 5 }).start();
-        }
-      },
-    })
-  ).current;
-
-  if (!visible) return null;
-
-  return (
-    <>
-      {isDragging && (
-        <FadeIn delay={0}>
-          <View style={styles.dropZone}>
-            <View style={styles.dropZoneInner}>
-              <Ionicons name="close" size={28} color="#fff" />
-            </View>
-            <Text style={styles.dropZoneText}>اسحب هنا للإخفاء</Text>
-          </View>
-        </FadeIn>
-      )}
-      <Animated.View
-        style={[
-          styles.whatsappContainer,
-          { bottom: fabBottom },
-          { transform: pan.getTranslateTransform() }
-        ]}
-        {...panResponder.panHandlers}
-      >
-        <TouchableOpacity style={styles.fabWhatsApp} activeOpacity={0.8} onPress={() => Linking.openURL('whatsapp://send?phone=+972543854441')}>
-          <FontAwesome5 name="whatsapp" size={30} color="#fff" />
-        </TouchableOpacity>
-      </Animated.View>
-    </>
-  );
-}
-
-// ─── Main Screen ────────────────────────────────────────────────────────────────
+// ─── Screen ───────────────────────────────────────────────────────────────────
 export default function HomeScreen() {
-  const [articles, setArticles] = useState<Article[]>([]);
   const [allArticles, setAllArticles] = useState<Article[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
@@ -545,21 +322,20 @@ export default function HomeScreen() {
   const [page, setPage] = useState(2);
   const [hasMore, setHasMore] = useState(true);
 
-  // Search & Notifications State
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Article[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const insets = useSafeAreaInsets();
 
   // On launch: register this device with the backend if notifications are on.
   useEffect(() => {
-    const setupNotifications = async () => {
+    (async () => {
       const isEnabled = await getNotificationsPreference();
       setNotificationsEnabled(isEnabled);
       if (isEnabled) await saveNotificationsPreference(true);
-    };
-    setupNotifications();
+    })();
   }, []);
 
   // Re-read the preference when coming back to this tab (it may have changed in Settings).
@@ -583,15 +359,14 @@ export default function HomeScreen() {
           onPress: async () => {
             const newState = !notificationsEnabled;
             setNotificationsEnabled(newState);
-
             const result = await saveNotificationsPreference(newState);
             if (newState && result === 'ok') {
               Alert.alert('تم التفعيل', 'تم تفعيل الإشعارات بنجاح!');
             } else if (newState && result === 'no-permission') {
               showNotificationPermissionAlert();
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -613,14 +388,10 @@ export default function HomeScreen() {
     }
   };
 
-  const fetchData = useCallback(async (reset = false) => {
+  const fetchData = useCallback(async () => {
     try {
-      const [artData, adData] = await Promise.all([
-        api.getArticles(1, 12),
-        api.getAds(),
-      ]);
+      const [artData, adData] = await Promise.all([api.getArticles(1, 12), api.getAds()]);
       setAllArticles(artData.articles);
-      setArticles(artData.articles);
       setAds(adData.ads);
       setHasMore(artData.pagination.page < artData.pagination.totalPages);
     } catch (e) {
@@ -633,7 +404,7 @@ export default function HomeScreen() {
 
   useEffect(() => { fetchData(); }, []);
 
-  const handleRefresh = () => { setRefreshing(true); setPage(2); fetchData(true); };
+  const handleRefresh = () => { setRefreshing(true); setPage(2); fetchData(); };
 
   const handleLoadMore = async () => {
     if (loadingMore || !hasMore) return;
@@ -641,10 +412,8 @@ export default function HomeScreen() {
     try {
       const data = await api.getArticles(page, 6);
       setAllArticles(prev => {
-        // Filter out any duplicates just in case
         const existingIds = new Set(prev.map(a => a._id));
-        const newArticles = data.articles.filter(a => !existingIds.has(a._id));
-        return [...prev, ...newArticles];
+        return [...prev, ...data.articles.filter(a => !existingIds.has(a._id))];
       });
       setHasMore(data.pagination.page < data.pagination.totalPages);
       setPage(p => p + 1);
@@ -653,384 +422,220 @@ export default function HomeScreen() {
   };
 
   const pinnedAd = ads.find(a => a.isPinned && a.isActive);
-  const featuredArticles = allArticles.slice(0, 6);
-  const previewArticles = allArticles;
-
-  if (loading) {
-    return (
-      <View style={styles.screen}>
-        <StatusBar barStyle="light-content" backgroundColor={C.redDark} />
-        <HeroBanner
-          onSearchPress={() => { }}
-          notificationsEnabled={true}
-          onToggleNotifications={() => { }}
-        />
-        <PulseCard h={220} />
-        <PulseCard h={200} />
-        <PulseCard h={80} />
-        <PulseCard h={80} />
-        <PulseCard h={80} />
-      </View>
-    );
-  }
+  const carouselArticles = allArticles.slice(0, CAROUSEL_COUNT);
 
   return (
     <View style={styles.screen}>
-      {/* Search Modal */}
-      <Modal visible={searchVisible} animationType="slide" transparent={false}>
-        <KeyboardAvoidingView style={styles.searchModalContainer} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={styles.searchHeader}>
-            <TouchableOpacity onPress={() => setSearchVisible(false)} style={styles.cancelSearchBtn}>
-              <Text style={styles.cancelSearchText}>إلغاء</Text>
-            </TouchableOpacity>
+      <StatusBar style="light" backgroundColor={colors.masthead} />
+
+      {/* Search */}
+      <Modal visible={searchVisible} animationType="slide" onRequestClose={() => setSearchVisible(false)}>
+        <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={[styles.searchHeader, { paddingTop: insets.top + spacing.sm }]}>
             <View style={styles.searchInputWrap}>
+              <Ionicons name="search" size={18} color={colors.soft} />
               <TextInput
                 style={styles.searchInput}
                 placeholder="ابحث عن خبر، عائلة، أو مناسبة..."
-                placeholderTextColor={C.textMuted}
+                placeholderTextColor={colors.faint}
                 autoFocus
                 returnKeyType="search"
                 value={searchQuery}
                 onChangeText={executeSearch}
               />
-              <Ionicons name="search" size={18} color={C.textMuted} />
             </View>
+            <Pressable onPress={() => setSearchVisible(false)} hitSlop={8} accessibilityRole="button">
+              <Text style={[type.button, { color: colors.onMasthead }]}>إلغاء</Text>
+            </Pressable>
           </View>
 
-          <ScrollView style={styles.searchBody} keyboardShouldPersistTaps="handled">
+          <ScrollView style={styles.screen} contentContainerStyle={{ padding: SIDE }} keyboardShouldPersistTaps="handled">
             {isSearching ? (
-              <ActivityIndicator size="large" color={C.red} style={{ marginTop: 40 }} />
+              <ActivityIndicator size="large" color={colors.masthead} style={{ marginTop: 40 }} />
             ) : searchResults.length > 0 ? (
-              searchResults.map((article, index) => (
-                <View key={article._id} style={{ marginBottom: 12 }}>
-                  <ArticleRow article={article} index={index} />
-                </View>
-              ))
-            ) : searchQuery.length >= 2 ? (
-              <View style={styles.searchEmpty}>
-                <Ionicons name="search-outline" size={48} color={C.cardBorder} />
-                <Text style={[styles.emptyText, { marginTop: 16 }]}>لم يتم العثور على نتائج</Text>
+              <View style={styles.list}>
+                {searchResults.map((a, i) => <ArticleRow key={a._id} article={a} first={i === 0} />)}
               </View>
-            ) : null}
+            ) : searchQuery.length >= 2 ? (
+              <View style={styles.empty}>
+                <Ionicons name="search-outline" size={44} color={colors.faint} />
+                <Text style={[type.title, styles.center]}>لا توجد نتائج لـ «{searchQuery}»</Text>
+                <Text style={[type.subhead, styles.center]}>جرّب كلمة أخرى أو اسم عائلة</Text>
+              </View>
+            ) : (
+              <Text style={[type.subhead, styles.center, { marginTop: 40 }]}>اكتب حرفين على الأقل للبحث</Text>
+            )}
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
 
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        style={styles.screen}
+        contentContainerStyle={{ paddingBottom: spacing.lg }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={C.red} colors={[C.red]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.masthead} colors={[colors.masthead]} />}
       >
-        <StatusBar barStyle="light-content" backgroundColor={C.redDark} />
-
-        {/* ① HERO BANNER */}
-        <HeroBanner
+        <Masthead
           onSearchPress={() => setSearchVisible(true)}
           notificationsEnabled={notificationsEnabled}
           onToggleNotifications={handleToggleNotifications}
         />
 
-        {/* ② PINNED AD */}
-        {pinnedAd && <PinnedAdCard ad={pinnedAd} />}
+        {loading ? (
+          <Skeleton />
+        ) : (
+          <>
+            {/* ① Pinned ad — always first */}
+            {pinnedAd && <PinnedAdCard ad={pinnedAd} />}
 
-        {/* ③ FEATURED SLIDER */}
-        {featuredArticles.length > 0 && <FeaturedSlider articles={featuredArticles} />}
+            {/* ② Carousel — the 5 latest news */}
+            <FeaturedCarousel articles={carouselArticles} />
 
-        {/* ④ ARTICLES SECTION */}
-        {allArticles.length > 1 && (
-          <View style={styles.articlesSection}>
-            <SectionHeader title="آخر الأخبار" />
+            {/* ③ All news (including the ones in the carousel) */}
+            {allArticles.length > 0 ? (
+              <View style={[styles.block, styles.padded]}>
+                <SectionTitle title="آخر الأخبار" />
+                <View style={styles.list}>
+                  {allArticles.map((a, i) => <ArticleRow key={a._id} article={a} first={i === 0} />)}
+                </View>
 
-            <View style={styles.articlesList}>
-              {previewArticles.map((a, i) => (
-                <ArticleRow key={a._id} article={a} index={i} />
-              ))}
-            </View>
-
-            {/* Load More Button */}
-            {hasMore && (
-              <LoadMoreButton onPress={handleLoadMore} loading={loadingMore} />
-            )}
-
-            {!hasMore && allArticles.length > 0 && (
-              <View style={styles.endTag}>
-                <Ionicons name="checkmark-circle" size={18} color={C.textMuted} />
-                <Text style={styles.endTagText}>وصلت لنهاية الأخبار</Text>
+                {hasMore ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={handleLoadMore}
+                    disabled={loadingMore}
+                    style={({ pressed }) => [styles.moreBtn, pressed && styles.cardPressed]}
+                  >
+                    {loadingMore ? (
+                      <ActivityIndicator color={colors.masthead} />
+                    ) : (
+                      <>
+                        <Text style={[type.button, { color: colors.masthead }]}>عرض المزيد من الأخبار</Text>
+                        <Ionicons name="chevron-down" size={16} color={colors.masthead} />
+                      </>
+                    )}
+                  </Pressable>
+                ) : (
+                  <Text style={[type.meta, styles.center, { paddingVertical: spacing.md }]}>وصلت إلى نهاية الأخبار</Text>
+                )}
               </View>
-            )}
-          </View>
-        )}
+            ) : !pinnedAd ? (
+              <View style={styles.empty}>
+                <Ionicons name="newspaper-outline" size={52} color={colors.faint} />
+                <Text style={[type.title, styles.center]}>لا توجد أخبار بعد</Text>
+                <Text style={[type.subhead, styles.center]}>اسحب للأسفل للتحديث</Text>
+              </View>
+            ) : null}
 
-        {/* Empty state */}
-        {allArticles.length === 0 && !pinnedAd && (
-          <View style={styles.emptyState}>
-            <Ionicons name="newspaper-outline" size={64} color={C.cardBorder} />
-            <Text style={styles.emptyText}>لا توجد أخبار بعد</Text>
-            <Text style={styles.emptySubText}>تحقق مجدداً لاحقاً</Text>
-          </View>
+            {/* ④ WhatsApp, socials, Powered by */}
+            <Footer />
+          </>
         )}
-
-        <SocialFooter />
-        <View style={{ height: 32 }} />
       </ScrollView>
-
-      {/* Floating WhatsApp Button */}
-      <DraggableWhatsApp />
     </View>
   );
 }
 
-// ─── Styles ─────────────────────────────────────────────────────────────────────
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: C.bg },
+  screen: { flex: 1, backgroundColor: colors.page },
+  padded: { paddingHorizontal: SIDE },
+  block: { marginTop: spacing.md },
+  center: { textAlign: 'center' },
+  inline: { flexDirection: 'row', alignItems: 'center', gap: 3 },
 
-  // ── Floating WhatsApp ──
-  whatsappContainer: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 100 : 90,
-    right: 20, // Physical Left in RTL mode
-    zIndex: 999,
+  // Masthead
+  masthead: {
+    backgroundColor: colors.masthead,
+    paddingBottom: spacing.ms,
+    borderBottomWidth: 3,
+    borderBottomColor: colors.goldRule,
   },
-  fabWhatsApp: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#25D366',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#25D366',
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-  dropZone: {
-    position: 'absolute',
-    bottom: 50,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 998,
-  },
-  dropZoneInner: {
-    width: 60, height: 60, borderRadius: 30, backgroundColor: C.redDark,
-    alignItems: 'center', justifyContent: 'center', opacity: 0.9,
-    borderWidth: 2, borderColor: C.cardBorder,
-  },
-  dropZoneText: { color: C.textSecondary, fontSize: 12, marginTop: 8, fontWeight: 'bold' },
-
-  // ── Modern Banner ──
-  modernBanner: {
-    paddingTop: IS_WEB ? 16 : 50,
-    paddingBottom: 10,
-    backgroundColor: C.card,
-    borderBottomWidth: 1,
-    borderBottomColor: C.cardBorder,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  bannerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    width: '100%',
-  },
-  bannerLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 10,
-  },
-  bannerCenter: {
-    flex: 2,
-    alignItems: 'center',
-  },
-  bannerRight: {
-    flex: 1,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  modernLogo: { width: 140, height: 75, resizeMode: 'contain' },
-  bannerLeftBtn: {
-    width: 42, height: 42, borderRadius: 21, backgroundColor: C.bg,
+  mastRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SIDE },
+  mastSide: { flex: 1, alignItems: 'flex-end' },
+  mastActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm },
+  mastWeekday: { fontFamily: fonts.semibold, fontSize: 13, color: colors.onMasthead, textAlign: 'right' },
+  mastDate: { fontFamily: fonts.regular, fontSize: 12, color: colors.onMastheadSoft, textAlign: 'right' },
+  logo: { width: 132, height: 84 },
+  mastBtn: {
+    width: 40, height: 40, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: C.cardBorder,
+    backgroundColor: 'rgba(255,255,255,0.14)',
   },
-  notificationDot: {
-    position: 'absolute', top: 10, right: 11, width: 10, height: 10,
-    borderRadius: 5, backgroundColor: C.redLight,
-    borderWidth: 2, borderColor: C.bg
-  },
-  bannerDateText: {
-    color: C.textSecondary,
-    fontSize: 12,
-    fontWeight: 'bold',
-    textAlign: 'right',
-    lineHeight: 18,
-  },
+  mastBtnPressed: { backgroundColor: 'rgba(255,255,255,0.28)' },
 
-  // ── Footer ──
-  footer: {
-    marginTop: 28,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  footerSocial: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-    marginBottom: 14,
-  },
-  footerBtn: {
-    alignItems: 'center',
+  // Section title
+  sectionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
+  sectionLine: { flex: 1, height: 1, backgroundColor: colors.line },
+
+  // Photo cards (ad + carousel)
+  mediaCard: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.surface, marginHorizontal: 0 },
+  media: { width: '100%', height: MEDIA_HEIGHT },
+  mediaEmpty: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.line },
+  cardPressed: { opacity: 0.88 },
+  scrim: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    paddingHorizontal: spacing.md, paddingTop: spacing.xl, paddingBottom: spacing.ms,
     gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 14,
-    backgroundColor: C.card,
-    borderWidth: 1,
-    borderColor: C.gold + '30',
   },
-  footerBtnLabel: {
-    color: C.textSecondary,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  footerCopy: {
-    color: C.textMuted,
-    fontSize: 11,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  poweredByBtn: {
-    marginTop: 12,
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  poweredByText: {
-    color: C.textSecondary,
-    fontSize: 11,
-    fontFamily: Platform.OS === 'ios' ? 'Arial' : 'sans-serif',
-  },
-
-  // ── Section labels ──
-  sectionLabelRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10, paddingHorizontal: 16, marginBottom: 10, marginTop: 18 },
-  sectionLabelBar: { flex: 1, height: 2, borderRadius: 2 },
-  adPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: C.red + '22', borderRadius: 20,
-    paddingHorizontal: 10, paddingVertical: 5,
-    borderWidth: 1, borderColor: C.red + '44',
-  },
-  adPillText: { color: C.gold, fontSize: 11, fontWeight: '700' },
-
-  // ── Pinned Ad ──
-  pinnedAdWrap: {},
-  adCard: { marginHorizontal: 16, borderRadius: 20, overflow: 'hidden', shadowColor: C.red, shadowRadius: 20, shadowOpacity: 0.4, elevation: 10 },
-  adImageWrap: { position: 'relative' },
-  adImage: { width: '100%', height: IS_WEB ? 200 : H * 0.27 },
-  adImagePlaceholder: { width: '100%', height: IS_WEB ? 200 : H * 0.27, alignItems: 'center', justifyContent: 'center' },
-  adOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '70%' },
-  adOverlayContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, alignItems: 'flex-end' },
-  adTitle: { color: '#fff', fontSize: 17, fontWeight: '800', textAlign: 'right', marginBottom: 4 },
-  adDesc: { color: 'rgba(255,255,255,0.75)', fontSize: 12, textAlign: 'right' },
-
-  // ── Video badge ──
-  videoBadge: {
-    position: 'absolute', top: 10, left: 10,
+  onPhotoTitle: { fontFamily: fonts.bold, fontSize: 18, lineHeight: 28, color: colors.white, textAlign: 'right', writingDirection: 'rtl' },
+  onPhotoSub: { fontFamily: fonts.regular, fontSize: 13, color: colors.onMastheadSoft, textAlign: 'right', writingDirection: 'rtl' },
+  onPhotoMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
+  onPhotoMetaText: { fontFamily: fonts.regular, fontSize: 12, color: colors.onMastheadSoft },
+  adLabel: {
+    position: 'absolute', top: spacing.sm, right: spacing.sm,
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 10,
-    paddingHorizontal: 8, paddingVertical: 4,
+    backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.sm,
+    paddingHorizontal: 8, paddingVertical: 3,
   },
-  videoBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-
-  // ── Featured Article ──
-  sliderWrap: { paddingBottom: 10 },
-  featuredCard: {
-    marginHorizontal: 16, borderRadius: 20, overflow: 'hidden',
-    shadowColor: '#000', shadowRadius: 16, shadowOpacity: 0.5, elevation: 8,
-    borderWidth: 1, borderColor: C.cardBorder,
-  },
-  featuredImage: { width: SCREEN_WIDTH - 32, height: IS_WEB ? 220 : H * 0.3 },
-  featuredImagePlaceholder: { width: SCREEN_WIDTH - 32, height: IS_WEB ? 220 : H * 0.3, alignItems: 'center', justifyContent: 'center' },
-  featuredOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '80%' },
-  featuredContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, gap: 6, alignItems: 'flex-end' },
-  catBadge: {
-    alignSelf: 'flex-end', borderRadius: 8,
-    paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1,
-  },
-  catBadgeText: { fontSize: 11, fontWeight: '800' },
-  featuredTitle: { color: '#fff', fontSize: 17, fontWeight: '800', textAlign: 'right', lineHeight: 26 },
-  featuredDesc: { color: 'rgba(255,255,255,0.7)', fontSize: 12, textAlign: 'right' },
-  featuredMeta: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
-  metaLeft: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { color: C.textSecondary, fontSize: 12 },
-  metaDate: { color: C.textSecondary, fontSize: 12 },
-
-  // ── Slider Dots ──
-  dotsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 12 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#3a1010' },
-  dotActive: { width: 16, backgroundColor: C.gold },
-
-  // ── Articles section ──
-  articlesSection: { paddingBottom: 8 },
-  sectionHeader: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: 12, paddingHorizontal: 16, marginVertical: 18,
-  },
-  sectionLine: { flex: 1, height: 1, borderRadius: 1 },
-  sectionTitle: {
-    color: C.textPrimary, fontSize: 14, fontWeight: '800',
-    letterSpacing: 1, textAlign: 'center',
-  },
-  articlesList: {
-    marginHorizontal: 16,
-    borderRadius: 16, overflow: 'hidden',
-    borderWidth: 1, borderColor: C.cardBorder,
-    backgroundColor: C.card,
+  videoBadge: {
+    position: 'absolute', top: spacing.sm, left: spacing.sm,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: radius.sm,
+    paddingHorizontal: 8, paddingVertical: 3,
   },
 
-  // ── Article Row ──
-  articleRow: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: 12, paddingVertical: 12, paddingHorizontal: 12,
-    borderBottomWidth: 1, borderBottomColor: C.cardBorder,
+  // Carousel dots
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: spacing.ms },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.line },
+  dotActive: { width: 18, backgroundColor: colors.masthead },
+
+  // News list
+  list: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.surface },
+  moreBtn: {
+    marginTop: spacing.ms, height: 48, borderRadius: radius.md,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line,
   },
-  thumbWrap: { position: 'relative', flexShrink: 0 },
-  thumb: { width: 82, height: 66, borderRadius: 12 },
-  thumbPlaceholder: { width: 82, height: 66, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  thumbCatDot: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, borderWidth: 1.5, borderColor: C.card },
-  articleText: { flex: 1, gap: 5, alignItems: 'flex-end' },
-  catBadgeSmall: { alignSelf: 'flex-end', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  catBadgeSmallText: { fontSize: 10, fontWeight: '700' },
-  articleTitle: { color: C.textPrimary, fontSize: 13, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl', lineHeight: 20, width: '100%' },
-  articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
-  articleMetaText: { color: C.textMuted, fontSize: 11, textAlign: 'right', writingDirection: 'rtl' },
 
-  // ── See All ──
-  seeAllWrap: { marginHorizontal: 16, marginTop: 16, borderRadius: 14, overflow: 'hidden' },
-  seeAllBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 15 },
-  seeAllText: { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 0.5 },
+  // Footer
+  footer: { marginTop: spacing.xl, gap: spacing.ms, alignItems: 'stretch' },
+  whatsapp: {
+    height: 52, borderRadius: radius.md, backgroundColor: colors.whatsapp,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+  },
+  socialRow: { flexDirection: 'row', gap: spacing.sm },
+  socialBtn: {
+    flex: 1, height: 44, borderRadius: radius.md, backgroundColor: colors.surface,
+    borderWidth: 1, borderColor: colors.line,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+  },
+  powered: { fontFamily: Platform.select({ ios: 'Helvetica Neue', default: 'sans-serif' }), fontSize: 12, color: colors.soft },
+  poweredName: { color: colors.masthead, fontWeight: '700' },
 
-  // ── End / Empty ──
-  endTag: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14 },
-  endTagText: { color: C.textMuted, fontSize: 13 },
-  emptyState: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, gap: 10 },
-  emptyText: { color: C.textSecondary, fontSize: 18, fontWeight: '700' },
-  emptySubText: { color: C.textMuted, fontSize: 13 },
+  // Empty / loading
+  empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl * 1.5, paddingHorizontal: SIDE },
+  skeleton: { borderRadius: radius.lg, backgroundColor: colors.line },
 
-  // ── Search Modal ──
-  searchModalContainer: { flex: 1, backgroundColor: C.bg },
-  searchHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 20 : 50, paddingBottom: 16, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.cardBorder, gap: 12 },
-  searchInputWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 12, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: C.cardBorder },
-  searchInput: { flex: 1, color: C.textPrimary, textAlign: 'right', fontSize: 15, marginStart: 8, height: '100%' },
-  cancelSearchBtn: { padding: 8 },
-  cancelSearchText: { color: C.red, fontSize: 16, fontWeight: '600' },
-  searchBody: { flex: 1, padding: 16 },
-  searchEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', opacity: 0.5 },
+  // Search
+  searchHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.ms,
+    paddingHorizontal: SIDE, paddingBottom: spacing.ms,
+    backgroundColor: colors.masthead,
+  },
+  searchInputWrap: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: spacing.ms, height: 44,
+  },
+  searchInput: { flex: 1, height: '100%', fontFamily: fonts.regular, fontSize: 16, color: colors.ink, textAlign: 'right', writingDirection: 'rtl' },
 });

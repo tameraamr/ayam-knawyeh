@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { api, Ad } from '@/lib/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, fonts } from '@/theme';
 
 function FadeDown({ children, delay = 0, style }: { children: React.ReactNode; delay?: number; style?: any }) {
     const anim = useRef(new Animated.Value(0)).current;
@@ -24,28 +25,30 @@ function FadeDown({ children, delay = 0, style }: { children: React.ReactNode; d
 const { width: W, height: H } = Dimensions.get('window');
 const IS_WEB = Platform.OS === 'web';
 
+// Local aliases onto the shared theme (keeps this screen's styles readable).
 const C = {
-    bg: '#0c0101', card: '#1e0808', cardBorder: '#3a1010',
-    red: '#c8102e', redDark: '#8b0000', gold: '#d4af37',
-    goldLight: '#f0d060', textPrimary: '#f5ede0',
-    textSecondary: '#a08878', textMuted: '#5a3a3a',
+    bg: colors.surface, card: colors.page, cardBorder: colors.line,
+    red: colors.masthead, redDark: '#6e0d1a', gold: colors.gold,
+    goldLight: colors.goldRule, textPrimary: colors.ink,
+    textSecondary: colors.soft, textMuted: colors.faint,
 };
 
 // ── Article-style CSS for the rich HTML content ────────────────────────────────
 const CONTENT_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap');
   body { margin: 0; padding: 0 16px 24px; background: transparent;
-    font-family: 'Segoe UI', Arial, sans-serif; direction: rtl; }
-  p { color: #f0e8dc; font-size: 15px; line-height: 1.9; margin: 0 0 14px; text-align: right; }
-  h1,h2,h3 { color: #f5ede0; text-align: right; margin: 18px 0 10px; }
-  h2 { font-size: 19px; border-right: 4px solid #c8102e; padding-right: 10px; }
-  h3 { font-size: 16px; color: #d4af37; }
+    font-family: 'IBM Plex Sans Arabic', -apple-system, 'Segoe UI', sans-serif; direction: rtl; }
+  p { color: ${colors.ink}; font-size: 16px; line-height: 1.9; margin: 0 0 14px; text-align: right; }
+  h1,h2,h3 { color: ${colors.ink}; text-align: right; margin: 18px 0 10px; }
+  h2 { font-size: 19px; border-right: 4px solid ${colors.masthead}; padding-right: 10px; }
+  h3 { font-size: 17px; color: ${colors.masthead}; }
   img { max-width: 100%; border-radius: 12px; margin: 12px 0; display: block; }
   video { max-width: 100%; border-radius: 12px; margin: 12px 0; }
-  a { color: #d4af37; }
-  ul, ol { color: #f0e8dc; text-align: right; padding-right: 20px; line-height: 1.9; }
-  blockquote { border-right: 3px solid #c8102e; margin: 14px 0; padding: 8px 14px;
-    background: rgba(200,16,46,0.08); border-radius: 0 8px 8px 0; color: #c0a090; }
-  strong { color: #fff; }
+  a { color: ${colors.masthead}; }
+  ul, ol { color: ${colors.ink}; text-align: right; padding-right: 20px; line-height: 1.9; }
+  blockquote { border-right: 3px solid ${colors.goldRule}; margin: 14px 0; padding: 8px 14px;
+    background: ${colors.page}; border-radius: 0 8px 8px 0; color: ${colors.soft}; }
+  strong { color: ${colors.ink}; }
 `;
 
 // ── Web HTML renderer ────────────────────────────────────────────────────────────
@@ -209,7 +212,6 @@ export default function AdDetailScreen() {
                 ) : ad.imageUrl ? (
                     <View style={styles.heroWrap}>
                         <Image source={{ uri: ad.imageUrl }} style={styles.heroImage} resizeMode="cover" />
-                        <LinearGradient colors={['transparent', 'rgba(12,1,1,0.9)']} style={styles.heroOverlay} />
                     </View>
                 ) : null}
 
@@ -320,10 +322,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12, paddingVertical: 6,
         borderWidth: 1, borderColor: C.red + '44',
     },
-    adBadgeText: { color: C.gold, fontSize: 12, fontWeight: '700' },
-    title: { color: C.textPrimary, fontSize: 22, fontWeight: '900', textAlign: 'right', lineHeight: 34 },
+    adBadgeText: { color: C.red, fontSize: 12, fontFamily: fonts.bold },
+    title: { color: C.textPrimary, fontSize: 23, fontFamily: fonts.bold, textAlign: 'right', lineHeight: 36 },
     divider: { height: 2, borderRadius: 2 },
-    shortDesc: { color: C.textSecondary, fontSize: 14, textAlign: 'right', lineHeight: 24 },
+    shortDesc: { color: C.textSecondary, fontSize: 15, fontFamily: fonts.regular, textAlign: 'right', lineHeight: 25 },
 
     contentWrap: {
         marginHorizontal: 4, marginTop: 10,
@@ -335,7 +337,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center',
         justifyContent: 'center', gap: 8, paddingVertical: 14,
     },
-    linkBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+    linkBtnText: { color: '#fff', fontSize: 15, fontFamily: fonts.semibold },
 
     backBtn: { backgroundColor: C.red, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 24 },
     backBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
@@ -348,5 +350,5 @@ const styles = StyleSheet.create({
         borderRadius: 14, backgroundColor: C.card,
         borderWidth: 1, borderColor: C.gold + '30',
     },
-    footerLabel: { color: C.textSecondary, fontSize: 11, fontWeight: '600' },
+    footerLabel: { color: C.textSecondary, fontSize: 11, fontFamily: fonts.semibold },
 });

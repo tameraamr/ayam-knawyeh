@@ -3,15 +3,24 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { I18nManager, Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import {
+  IBMPlexSansArabic_400Regular,
+  IBMPlexSansArabic_500Medium,
+  IBMPlexSansArabic_600SemiBold,
+  IBMPlexSansArabic_700Bold,
+} from '@expo-google-fonts/ibm-plex-sans-arabic';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Audio } from 'expo-av';
 import { registerForPushNotifications } from '@/lib/notifications';
+import { colors, fonts } from '@/theme';
 
 import * as Updates from 'expo-updates';
 
-// Force RTL for Arabic Standalone APKs
-// Standalone builds need a reload after forcing RTL to apply correctly
+// Force RTL (Arabic) in store builds; a reload is needed for it to apply.
+// Not in development: Expo Go ignores forceRTL, so reloading there loops forever.
 if (!I18nManager.isRTL) {
   I18nManager.allowRTL(true);
   I18nManager.forceRTL(true);
@@ -19,6 +28,8 @@ if (!I18nManager.isRTL) {
     Updates.reloadAsync();
   }
 }
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 
 // ─── Open the right screen when the user taps a push notification ─────────────
@@ -56,6 +67,18 @@ function useNotificationTapHandler() {
 export default function RootLayout() {
   useNotificationTapHandler();
 
+  const [fontsLoaded, fontError] = useFonts({
+    IBMPlexSansArabic_400Regular,
+    IBMPlexSansArabic_500Medium,
+    IBMPlexSansArabic_600SemiBold,
+    IBMPlexSansArabic_700Bold,
+  });
+  const ready = fontsLoaded || !!fontError; // on error, fall back to the system font
+
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync().catch(() => {});
+  }, [ready]);
+
   useEffect(() => {
     // Configure audio to play even if the physical silent switch is on (iOS)
     Audio.setAudioModeAsync({
@@ -70,16 +93,20 @@ export default function RootLayout() {
     });
   }, []);
 
+  // The navigator always renders (Expo Router needs it mounted, e.g. for notification taps);
+  // the splash screen stays up until the fonts are ready.
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <StatusBar style="light" backgroundColor="#0c0101" />
+        {/* Every screen opens with the crimson masthead, so light status-bar text everywhere */}
+        <StatusBar style="light" backgroundColor={colors.masthead} />
         <Stack
           screenOptions={{
-            headerStyle: { backgroundColor: '#0c0101' },
-            headerTintColor: '#f9fafb',
-            headerTitleStyle: { fontWeight: '700' },
-            contentStyle: { backgroundColor: '#0c0101' },
+            headerStyle: { backgroundColor: colors.masthead },
+            headerTintColor: colors.onMasthead,
+            headerTitleStyle: { fontFamily: fonts.bold, fontSize: 17 },
+            headerShadowVisible: false,
+            contentStyle: { backgroundColor: colors.page },
             animation: 'slide_from_right',
           }}
         >
@@ -89,7 +116,6 @@ export default function RootLayout() {
             options={{
               title: '',
               headerBackTitle: 'رجوع',
-              headerStyle: { backgroundColor: '#111827' },
             }}
           />
         </Stack>

@@ -1,5 +1,5 @@
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, Pressable,
   ActivityIndicator, Share, Image, Platform, Dimensions, Alert,
 } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
@@ -8,30 +8,28 @@ import type { WebViewMessageEvent } from 'react-native-webview';
 import { api, Article } from '@/lib/api';
 import { formatFullDate } from '@/lib/date';
 import { Ionicons } from '@expo/vector-icons';
+import { CategoryChip } from '@/components/CategoryChip';
+import { colors, fonts, radius, spacing, type } from '@/theme';
 
-const CATEGORY_COLORS: Record<string, string> = {
-  'اخبار البلد': '#e62020', 'مواليد جدد': '#3b82f6', 'ابناء كفركنا': '#8b5cf6',
-  'افراح': '#f97316', 'يصادف اليوم': '#eab308', 'محلات تجارية': '#ec4899', 'تنويهات': '#06b6d4',
-};
-
+// Article body is HTML from the admin editor, rendered in a WebView with the app's look.
 const ARTICLE_STYLE = `
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Noto Sans Arabic', sans-serif;
-      background: #0a0f1a; color: #e5e7eb;
-      font-size: 16px; line-height: 1.9; direction: rtl;
+      font-family: 'IBM Plex Sans Arabic', -apple-system, 'Segoe UI', sans-serif;
+      background: ${colors.surface}; color: ${colors.ink};
+      font-size: 17px; line-height: 1.9; direction: rtl;
     }
     p { margin-bottom: 14px; }
-    h1,h2,h3 { color: #f9fafb; margin-bottom: 10px; line-height: 1.4; }
-    h1 { font-size: 21px; } h2 { font-size: 18px; } h3 { font-size: 16px; }
+    h1,h2,h3 { color: ${colors.ink}; margin: 18px 0 10px; line-height: 1.45; font-weight: 700; }
+    h1 { font-size: 22px; } h2 { font-size: 19px; } h3 { font-size: 17px; }
     img { max-width: 100%; border-radius: 10px; margin: 10px 0; display: block; }
-    a { color: #e62020; }
-    blockquote { border-right: 4px solid #e62020; padding-right: 12px; color: #9ca3af; font-style: italic; margin: 14px 0; }
-    ul,ol { padding-right: 22px; margin-bottom: 14px; } li { margin-bottom: 5px; }
-    strong { font-weight: 700; color: #f9fafb; }
-    code { background: #1f2937; padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+    a { color: ${colors.masthead}; }
+    blockquote { border-right: 4px solid ${colors.goldRule}; padding: 4px 12px 4px 0; color: ${colors.soft}; margin: 14px 0; }
+    ul,ol { padding-right: 22px; margin-bottom: 14px; } li { margin-bottom: 6px; }
+    strong { font-weight: 700; }
+    code { background: ${colors.page}; padding: 2px 5px; border-radius: 4px; font-family: monospace; }
   </style>
 `;
 
@@ -40,7 +38,7 @@ function WebArticleContent({ html }: { html: string }) {
   return (
     <div
       dangerouslySetInnerHTML={{ __html: ARTICLE_STYLE + html }}
-      style={{ direction: 'rtl', color: '#e5e7eb', lineHeight: 1.9 }}
+      style={{ direction: 'rtl', color: colors.ink, lineHeight: 1.9 }}
     />
   );
 }
@@ -162,7 +160,7 @@ export default function ArticleScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#e62020" />
+        <ActivityIndicator size="large" color={colors.masthead} />
       </View>
     );
   }
@@ -170,16 +168,15 @@ export default function ArticleScreen() {
   if (!article) {
     return (
       <View style={styles.centered}>
-        <Ionicons name="alert-circle-outline" size={48} color="#6b7280" />
-        <Text style={styles.errorText}>الخبر غير موجود</Text>
+        <Ionicons name="alert-circle-outline" size={44} color={colors.faint} />
+        <Text style={[type.title, { textAlign: 'center' }]}>الخبر غير موجود</Text>
+        <Text style={[type.subhead, { textAlign: 'center' }]}>ربما تم حذفه. ارجع إلى الصفحة الرئيسية لقراءة آخر الأخبار.</Text>
       </View>
     );
   }
 
-  const categoryColor = CATEGORY_COLORS[article.category] || '#6b7280';
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1, paddingBottom: spacing.xl }} nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
       {/* Cover */}
       {article.videoUrl ? (
         <View style={{ width: '100%' }}>
@@ -190,42 +187,39 @@ export default function ArticleScreen() {
       ) : null}
 
       <View style={styles.body}>
-        {/* Meta */}
+        {/* Category + date */}
         <View style={styles.metaRow}>
-          <View style={[styles.catBadge, { backgroundColor: categoryColor + '20' }]}>
-            <Text style={[styles.catText, { color: categoryColor }]}>{article.category}</Text>
-          </View>
-          <Text style={styles.date}>
-            {formatFullDate(article.createdAt)}
-          </Text>
+          <CategoryChip name={article.category} style={{ alignSelf: 'auto' }} />
+          <Text style={type.meta}>{formatFullDate(article.createdAt)}</Text>
         </View>
 
-        {/* Title */}
-        <Text style={styles.title}>{article.title}</Text>
+        <Text style={type.display}>{article.title}</Text>
 
-        {/* Author + Share + Report */}
-        <View style={styles.authorRow}>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity onPress={handleShare} style={styles.shareBtn}>
-              <Ionicons name="share-social-outline" size={20} color="#e62020" />
-              <Text style={styles.shareText}>مشاركة</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleReport} style={styles.reportBtn}>
-              <Ionicons name="flag-outline" size={18} color="#9ca3af" />
-              <Text style={styles.reportText}>إبلاغ</Text>
-            </TouchableOpacity>
+        {/* Author, views */}
+        <View style={styles.byline}>
+          <Text style={[type.meta, { color: colors.ink, fontFamily: fonts.medium }]}>{article.author}</Text>
+          <View style={styles.inline}>
+            <Ionicons name="eye-outline" size={13} color={colors.soft} />
+            <Text style={type.meta}>{article.views}</Text>
           </View>
-          <View style={styles.authorInfo}>
-            <View style={styles.viewsRow}>
-              <Ionicons name="eye-outline" size={14} color="#6b7280" />
-              <Text style={styles.viewsText}>{article.views}</Text>
-            </View>
-            <Text style={styles.author}>{article.author}</Text>
-          </View>
+        </View>
+
+        {/* Share + report */}
+        <View style={styles.actions}>
+          <Pressable accessibilityRole="button" onPress={handleShare} style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.85 }]}>
+            <Ionicons name="share-social-outline" size={18} color={colors.white} />
+            <Text style={[type.button, { color: colors.white }]}>مشاركة الخبر</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={handleReport} style={({ pressed }) => [styles.reportBtn, pressed && { opacity: 0.7 }]}>
+            <Ionicons name="flag-outline" size={16} color={colors.soft} />
+            <Text style={[type.label, { color: colors.soft }]}>إبلاغ</Text>
+          </Pressable>
         </View>
 
         {/* Description */}
-        <Text style={styles.desc}>{article.description}</Text>
+        {article.description && article.description !== article.title ? (
+          <Text style={[type.body, styles.desc]}>{article.description}</Text>
+        ) : null}
         <View style={styles.divider} />
 
         {/* Rich Content */}
@@ -233,15 +227,12 @@ export default function ArticleScreen() {
 
         {/* Tags */}
         {article.tags.length > 0 && (
-          <View style={styles.tagsBox}>
-            <Text style={styles.tagsLabel}>الوسوم:</Text>
-            <View style={styles.tags}>
-              {article.tags.map(tag => (
-                <View key={tag} style={styles.tag}>
-                  <Text style={styles.tagText}>#{tag}</Text>
-                </View>
-              ))}
-            </View>
+          <View style={styles.tags}>
+            {article.tags.map(tag => (
+              <View key={tag} style={styles.tag}>
+                <Text style={[type.label, { color: colors.soft }]}>#{tag}</Text>
+              </View>
+            ))}
           </View>
         )}
       </View>
@@ -250,30 +241,25 @@ export default function ArticleScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0f1a' },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  errorText: { color: '#6b7280', fontSize: 16 },
-  cover: { width: '100%', height: 250 },
-  body: { padding: 16 },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  catBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
-  catText: { fontSize: 12, fontWeight: '700' },
-  date: { color: '#6b7280', fontSize: 12 },
-  title: { fontSize: 22, fontWeight: '800', color: '#f9fafb', lineHeight: 34, textAlign: 'right', marginBottom: 14 },
-  authorRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  authorInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  author: { color: '#9ca3af', fontSize: 13 },
-  viewsRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  viewsText: { color: '#6b7280', fontSize: 13 },
-  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e6202015', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: '#e6202030' },
-  shareText: { color: '#e62020', fontSize: 13, fontWeight: '600' },
-  reportBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#1f2937', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: '#374151' },
-  reportText: { color: '#9ca3af', fontSize: 12, fontWeight: '600' },
-  desc: { color: '#d1d5db', fontSize: 15, lineHeight: 26, textAlign: 'right', marginBottom: 16 },
-  divider: { height: 1, backgroundColor: '#1f2937', marginBottom: 16 },
-  tagsBox: { marginTop: 20, padding: 16, backgroundColor: '#111827', borderRadius: 12 },
-  tagsLabel: { color: '#6b7280', fontSize: 12, textAlign: 'right', marginBottom: 8 },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' },
-  tag: { backgroundColor: '#1f2937', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
-  tagText: { color: '#9ca3af', fontSize: 12 },
+  container: { flex: 1, backgroundColor: colors.surface },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.lg, backgroundColor: colors.page },
+  cover: { width: '100%', height: 260, backgroundColor: colors.page },
+  body: { padding: spacing.md, gap: spacing.ms },
+  metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  inline: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  byline: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  shareBtn: {
+    flex: 1, height: 44, borderRadius: radius.md, backgroundColor: colors.masthead,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+  },
+  reportBtn: {
+    height: 44, paddingHorizontal: spacing.md, borderRadius: radius.md,
+    borderWidth: 1, borderColor: colors.line,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+  },
+  desc: { color: colors.soft, fontFamily: fonts.medium },
+  divider: { height: 1, backgroundColor: colors.line },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
+  tag: { backgroundColor: colors.page, borderRadius: radius.sm, paddingHorizontal: 10, paddingVertical: 5 },
 });

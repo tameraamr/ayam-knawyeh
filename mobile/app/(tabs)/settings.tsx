@@ -1,21 +1,21 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Image, Switch } from 'react-native';
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import {
   getNotificationsPreference,
   saveNotificationsPreference,
   showNotificationPermissionAlert,
 } from '@/lib/notificationPrefs';
-
-const API_BASE = __DEV__
-  ? (process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000')
-  : 'https://ayam-knawyeh-production.up.railway.app';
+import { colors, fonts, radius, spacing, type } from '@/theme';
 
 const FRONTEND_URL = __DEV__
   ? (process.env.EXPO_PUBLIC_FRONTEND_URL || 'http://10.0.2.2:3000')
   : 'https://ayam-knawyeh.vercel.app';
+const WHATSAPP_NUMBER = '+972543854441';
+
+type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -36,115 +36,114 @@ export default function SettingsScreen() {
     if (value && result === 'no-permission') showNotificationPermissionAlert();
   };
 
+  const openWhatsApp = async () => {
+    const app = `whatsapp://send?phone=${WHATSAPP_NUMBER}`;
+    const web = `https://wa.me/${WHATSAPP_NUMBER.replace('+', '')}`;
+    try {
+      if (await Linking.canOpenURL(app)) await Linking.openURL(app);
+      else await Linking.openURL(web);
+    } catch {
+      Linking.openURL(web);
+    }
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* App Header */}
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.appHeader}>
-        <View style={styles.appIcon}>
-          <Image source={require('../../assets/adaptive-icon.png')} style={{ width: 60, height: 60, borderRadius: 12 }} />
-        </View>
-        <Text style={styles.appName}>ايام كناوية</Text>
-        <Text style={styles.appVersion}>الإصدار {Constants.expoConfig?.version || '1.0.0'}</Text>
+        <Image source={require('../../assets/adaptive-icon.png')} style={styles.appIcon} />
+        <Text style={[type.headline, styles.center]}>ايام كناوية</Text>
+        <Text style={[type.meta, styles.center]}>الإصدار {Constants.expoConfig?.version || '1.0.0'}</Text>
       </View>
 
-      {/* Info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>المعلومات</Text>
-        <View style={styles.card}>
-          <Row icon="server-outline" label="عنوان الخادم" value={API_BASE} mono />
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <View style={styles.rowLeft}>
-              <Ionicons name={notificationsEnabled ? 'notifications-outline' : 'notifications-off-outline'} size={18} color="#6b7280" />
-              <Text style={styles.rowLabel}>الإشعارات</Text>
-            </View>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={handleToggleNotifications}
-              disabled={saving}
-              trackColor={{ false: '#374151', true: '#d4af37' }}
-              thumbColor="#f9fafb"
-              ios_backgroundColor="#374151"
-            />
+      <Section title="الإشعارات">
+        <View style={styles.row}>
+          <RowLabel
+            icon={notificationsEnabled ? 'notifications-outline' : 'notifications-off-outline'}
+            label="إشعارات الأخبار العاجلة"
+          />
+          <Switch
+            value={notificationsEnabled}
+            onValueChange={handleToggleNotifications}
+            disabled={saving}
+            trackColor={{ false: colors.line, true: colors.masthead }}
+            ios_backgroundColor={colors.line}
+          />
+        </View>
+      </Section>
+
+      <Section title="تواصل معنا">
+        <Pressable onPress={openWhatsApp} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+          <View style={styles.rowLabel}>
+            <FontAwesome5 name="whatsapp" size={18} color={colors.whatsapp} />
+            <Text style={styles.label}>أرسل لنا خبراً عبر واتساب</Text>
           </View>
-          <View style={styles.divider} />
-          <Row icon="globe-outline" label="اللغة" value="العربية" />
-        </View>
-      </View>
+          <Ionicons name="chevron-back" size={16} color={colors.faint} />
+        </Pressable>
+        <Divider />
+        <LinkRow icon="call-outline" label="اتصل بنا" onPress={() => Linking.openURL(`${FRONTEND_URL}/contact`)} />
+      </Section>
 
+      <Section title="عن التطبيق">
+        <Text style={[type.subhead, styles.about]}>
+          تطبيق ايام كناوية منصة إخبارية لأخبار البلدة، تهدف إلى إيصال آخر الأخبار والمستجدات إلى أبناء كفركنا في أسرع وقت ممكن.
+        </Text>
+        <Divider />
+        <LinkRow icon="shield-checkmark-outline" label="سياسة الخصوصية" onPress={() => Linking.openURL(`${FRONTEND_URL}/privacy`)} />
+        <Divider />
+        <LinkRow icon="document-text-outline" label="شروط الاستخدام" onPress={() => Linking.openURL(`${FRONTEND_URL}/terms`)} />
+      </Section>
 
-
-      {/* About */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>عن التطبيق</Text>
-        <View style={styles.card}>
-          <Text style={styles.about}>
-            تطبيق ايام كناوية هو منصة إخبارية اخبار البلدة تهدف إلى إيصال آخر الأخبار والمستجدات إلى أبناء المنطقة في أسرع وقت ممكن.
-          </Text>
-        </View>
-      </View>
-
-      {/* Legal */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>القانونية والتواصل</Text>
-        <View style={styles.card}>
-          <ClickableRow icon="call-outline" label="اتصل بنا" onPress={() => Linking.openURL(`${FRONTEND_URL}/contact`)} />
-          <View style={styles.divider} />
-          <ClickableRow icon="shield-checkmark-outline" label="سياسة الخصوصية" onPress={() => Linking.openURL(`${FRONTEND_URL}/privacy`)} />
-          <View style={styles.divider} />
-          <ClickableRow icon="document-text-outline" label="شروط الاستخدام" onPress={() => Linking.openURL(`${FRONTEND_URL}/terms`)} />
-        </View>
-      </View>
-
-      <Text style={styles.footer}>جميع الحقوق محفوظة © 2026 ايام كناوية</Text>
+      <Text style={[type.meta, styles.center, { marginTop: spacing.sm }]}>
+        جميع الحقوق محفوظة © {new Date().getFullYear()} ايام كناوية
+      </Text>
     </ScrollView>
   );
 }
 
-function ClickableRow({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress}>
-      <View style={styles.rowLeft}>
-        <Ionicons name={icon as never} size={18} color="#6b7280" />
-        <Text style={styles.rowLabel}>{label}</Text>
-      </View>
-      <Ionicons name="chevron-back" size={16} color="#4b5563" />
-    </TouchableOpacity>
-  );
-}
-
-function Row({ icon, label, value, mono }: { icon: string; label: string; value: string; mono?: boolean }) {
-  return (
-    <View style={styles.row}>
-      <View style={styles.rowLeft}>
-        <Ionicons name={icon as never} size={18} color="#6b7280" />
-        <Text style={styles.rowLabel}>{label}</Text>
-      </View>
-      <Text style={[styles.rowValue, mono && styles.mono]} numberOfLines={1}>{value}</Text>
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.card}>{children}</View>
     </View>
   );
 }
 
+function Divider() {
+  return <View style={styles.divider} />;
+}
+
+function RowLabel({ icon, label }: { icon: IconName; label: string }) {
+  return (
+    <View style={styles.rowLabel}>
+      <Ionicons name={icon} size={19} color={colors.masthead} />
+      <Text style={styles.label}>{label}</Text>
+    </View>
+  );
+}
+
+function LinkRow({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="link" onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+      <RowLabel icon={icon} label={label} />
+      <Ionicons name="chevron-back" size={16} color={colors.faint} />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0f1a' },
-  content: { padding: 16, paddingBottom: 100 },
-  appHeader: { alignItems: 'center', paddingVertical: 32, gap: 8 },
-  appIcon: {
-    width: 80, height: 80, borderRadius: 20,
-    backgroundColor: '#e6202015', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: '#e6202030',
-  },
-  appName: { fontSize: 22, fontWeight: '800', color: '#f9fafb', textAlign: 'right', writingDirection: 'rtl' },
-  appVersion: { fontSize: 13, color: '#6b7280', textAlign: 'right', writingDirection: 'rtl' },
-  section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 13, fontWeight: '600', color: '#6b7280', textAlign: 'right', writingDirection: 'rtl', marginBottom: 8, paddingHorizontal: 4 },
-  card: { backgroundColor: '#111827', borderRadius: 16, borderWidth: 1, borderColor: '#1f2937', padding: 4 },
-  divider: { height: 1, backgroundColor: '#1f2937', marginHorizontal: 12 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12 },
-  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rowLabel: { color: '#d1d5db', fontSize: 14, textAlign: 'right', writingDirection: 'rtl' },
-  rowValue: { color: '#6b7280', fontSize: 13, maxWidth: '55%', textAlign: 'right', writingDirection: 'rtl' },
-  mono: { fontFamily: 'monospace', fontSize: 11, color: '#4b5563' },
-  about: { color: '#9ca3af', fontSize: 14, lineHeight: 22, textAlign: 'right', writingDirection: 'rtl', padding: 14 },
-  footer: { color: '#374151', fontSize: 12, textAlign: 'center', marginTop: 20 },
+  screen: { flex: 1, backgroundColor: colors.page },
+  content: { padding: spacing.md, paddingBottom: spacing.xl },
+  center: { textAlign: 'center' },
+  appHeader: { alignItems: 'center', paddingVertical: spacing.lg, gap: spacing.xs },
+  appIcon: { width: 72, height: 72, borderRadius: 18, marginBottom: spacing.xs },
+  section: { marginBottom: spacing.lg },
+  sectionTitle: { fontFamily: fonts.semibold, fontSize: 13, color: colors.soft, textAlign: 'right', marginBottom: spacing.sm, paddingHorizontal: spacing.xs },
+  card: { backgroundColor: colors.surface, borderRadius: radius.lg, overflow: 'hidden' },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.line, marginHorizontal: spacing.md },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, minHeight: 52 },
+  pressed: { backgroundColor: colors.page },
+  rowLabel: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
+  label: { fontFamily: fonts.medium, fontSize: 15, color: colors.ink, textAlign: 'right' },
+  about: { padding: spacing.md },
 });
