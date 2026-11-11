@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ayamknawyeh.app",
+      "sha256_cert_fingerprints": ["0F:56:A3:6B:2F:E2:27:CB:77:C4:15:D2:08:BB:12:9B:83:2F:18:CB:56:B5:5B:21:5E:B9:F4:BF:A1:74:0E:10"]
+    }
+  }
+]
