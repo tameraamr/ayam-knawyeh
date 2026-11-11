@@ -21,7 +21,6 @@ import { formatRelativeDate, formatArabicDate } from '@/lib/date';
 import { colors, fonts, radius, spacing, type } from '@/theme';
 import { ArticleRow } from '@/components/ArticleRow';
 import { CategoryChip } from '@/components/CategoryChip';
-import { PrayerBar } from '@/components/PrayerBar';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const IS_WEB = Platform.OS === 'web';
@@ -83,9 +82,6 @@ function Masthead({
           </Pressable>
         </View>
       </View>
-
-      {/* Next prayer; tap for today's timetable */}
-      <PrayerBar />
     </View>
   );
 }

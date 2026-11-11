@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["59PUYX8DZ9.com.ayamknawyeh.app"],
+        "components": [{ "/": "/article/*", "comment": "Shared news links open in the app" }],
+        "appID": "59PUYX8DZ9.com.ayamknawyeh.app",
+        "paths": ["/article/*"]
+      }
+    ]
+  }
+}

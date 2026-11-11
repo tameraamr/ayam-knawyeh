@@ -50,17 +50,6 @@ function arabicCount(n: number, one: string, two: string, few: string, many: str
   return `${n} ${many}`;
 }
 
-/** "دقيقة" / "دقيقتين" / "5 دقائق" / "ساعتين و10 دقائق" for a duration in the future. */
-export function formatDuration(totalMinutes: number): string {
-  const m = Math.max(1, Math.round(totalMinutes));
-  const h = Math.floor(m / 60);
-  const rest = m % 60;
-  const mins = (n: number) => arabicCount(n, 'دقيقة', 'دقيقتين', 'دقائق', 'دقيقة');
-  if (h === 0) return mins(rest);
-  const hours = arabicCount(h, 'ساعة', 'ساعتين', 'ساعات', 'ساعة');
-  return rest === 0 ? hours : `${hours} و${mins(rest)}`;
-}
-
 /**
  * Relative time for recent news: "الآن", "منذ 5 دقائق", "منذ ساعتين", "أمس", "منذ 3 أيام".
  * After a week it falls back to the short date ("27 أبريل").

@@ -30,7 +30,10 @@
           "whatsapp"
         ],
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "associatedDomains": [
+        "applinks:ayam-knawyeh.vercel.app"
+      ]
     },
     "android": {
       "supportsRtl": true,
@@ -57,8 +60,7 @@
         }
       ],
       "expo-font",
-      "expo-video",
-      "@sentry/react-native"
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true

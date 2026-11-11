@@ -15,7 +15,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { registerForPushNotifications } from '@/lib/notifications';
 import { colors, fonts } from '@/theme';
-import { withCrashReporting } from '@/lib/crashReporting';
 
 import * as Updates from 'expo-updates';
 
@@ -64,7 +63,7 @@ function useNotificationTapHandler() {
   }, []);
 }
 
-function RootLayout() {
+export default function RootLayout() {
   useNotificationTapHandler();
 
   const [fontsLoaded, fontError] = useFonts({
@@ -118,5 +117,3 @@ function RootLayout() {
     </SafeAreaProvider>
   );
 }
-
-export default withCrashReporting(RootLayout);
