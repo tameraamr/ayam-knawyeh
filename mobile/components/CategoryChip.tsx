@@ -21,7 +21,7 @@ export function CategoryChip({
 
 const styles = StyleSheet.create({
   chip: {
-    alignSelf: 'flex-end', // proven in the RTL store build: sits on the right edge
+    alignSelf: 'flex-start', // start = right edge in RTL
     borderRadius: radius.sm,
     paddingHorizontal: 8,
     paddingVertical: 3,

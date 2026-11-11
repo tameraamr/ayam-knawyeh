@@ -87,7 +87,9 @@
       "router": {},
       "eas": {
         "projectId": "7fd46ac6-5e64-4e37-8c7d-fa57874c90b0"
-      }
+      },
+      "supportsRTL": true,
+      "forcesRTL": true
     },
     "runtimeVersion": {
       "policy": "appVersion"

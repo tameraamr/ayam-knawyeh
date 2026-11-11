@@ -111,7 +111,9 @@ export const fonts = {
   bold: 'IBMPlexSansArabic_700Bold',
 } as const;
 
-const rtl: TextStyle = { textAlign: 'right', writingDirection: 'rtl' };
+// Arabic text alignment: use 'auto' (natural), never 'right'. In the RTL app React
+// Native swaps 'right' to 'left'; 'auto' + rtl always puts Arabic on the right edge.
+const rtl: TextStyle = { textAlign: 'auto', writingDirection: 'rtl' };
 
 // Type ramp. Sizes are a little larger than before: the audience includes older readers.
 export const type = {

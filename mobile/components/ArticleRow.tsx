@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line },
   pressed: { backgroundColor: colors.page },
-  text: { flex: 1, gap: 6, alignItems: 'flex-end' },
+  text: { flex: 1, gap: 6, alignItems: 'flex-start' },
   fill: { alignSelf: 'stretch' },
   meta: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
   views: { flexDirection: 'row', alignItems: 'center', gap: 3 },

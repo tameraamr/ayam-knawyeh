@@ -1,8 +1,8 @@
 import {
   View, Text, ScrollView, StyleSheet, Pressable, Image,
   Dimensions, ActivityIndicator, RefreshControl, Platform,
-  Animated, Alert, TextInput, Modal, KeyboardAvoidingView, FlatList,
-  type NativeSyntheticEvent, type NativeScrollEvent,
+  Animated, Alert, TextInput, Modal, KeyboardAvoidingView, FlatList, I18nManager,
+  type NativeSyntheticEvent, type NativeScrollEvent, type StyleProp, type ViewStyle,
 } from 'react-native';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -26,6 +26,7 @@ import { Footer } from '@/components/Footer';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const IS_WEB = Platform.OS === 'web';
+const IS_RTL = I18nManager.isRTL;
 const SIDE = spacing.md;                       // screen edge padding
 const CARD_WIDTH = SCREEN_WIDTH - SIDE * 2;
 const MEDIA_HEIGHT = IS_WEB ? 220 : Math.round(SCREEN_HEIGHT * 0.27);
@@ -126,9 +127,9 @@ function NativeVideoPreview({ uri, height }: { uri: string; height: number }) {
   return <VideoView player={player} style={{ width: '100%', height }} contentFit="cover" nativeControls={false} />;
 }
 
-function VideoBadge() {
+function VideoBadge({ style }: { style?: StyleProp<ViewStyle> }) {
   return (
-    <View style={styles.videoBadge}>
+    <View style={[styles.videoBadge, style]}>
       <Ionicons name="play" size={11} color={colors.white} />
       <Text style={[type.label, { color: colors.white }]}>فيديو</Text>
     </View>
@@ -206,10 +207,15 @@ function FeaturedCarousel({ articles }: { articles: Article[] }) {
   return (
     <View style={styles.block}>
       <View style={styles.padded}><SectionTitle title="أبرز الأخبار" /></View>
+      {/* RTL-safe carousel: horizontal lists compute wrong offsets in RTL, so the list
+          itself runs LTR and inverted (item 0 on the right, swipe left for the next),
+          and each card switches back to RTL. */}
       <FlatList
         ref={listRef}
         data={articles}
         horizontal
+        inverted={IS_RTL}
+        style={IS_RTL ? { direction: 'ltr' } : undefined}
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
@@ -219,6 +225,8 @@ function FeaturedCarousel({ articles }: { articles: Article[] }) {
         keyExtractor={(item) => item._id}
         getItemLayout={(_, index) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * index, index })}
         renderItem={({ item }) => (
+          // Cards sit in an LTR list (see above), so their layout is written with
+          // physical sides: chip and text on the right, video badge on the left.
           <View style={{ width: SCREEN_WIDTH, paddingHorizontal: SIDE }}>
             <Pressable
               accessibilityRole="button"
@@ -233,11 +241,11 @@ function FeaturedCarousel({ articles }: { articles: Article[] }) {
                   <Ionicons name="newspaper-outline" size={40} color={colors.faint} />
                 </View>
               )}
-              {item.videoUrl ? <VideoBadge /> : null}
+              {item.videoUrl ? <VideoBadge style={styles.videoBadgeLeft} /> : null}
               <LinearGradient colors={['transparent', colors.overlay]} style={styles.scrim}>
-                <CategoryChip name={item.category} onPhoto />
+                <CategoryChip name={item.category} onPhoto style={styles.alignRight} />
                 <Text style={styles.onPhotoTitle} numberOfLines={2}>{item.title}</Text>
-                <View style={styles.onPhotoMeta}>
+                <View style={[styles.onPhotoMeta, styles.rowFromRight]}>
                   <Text style={styles.onPhotoMetaText}>{formatRelativeDate(item.createdAt)}</Text>
                   <View style={styles.inline}>
                     <Ionicons name="eye-outline" size={12} color={colors.onMastheadSoft} />
@@ -520,10 +528,10 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.goldRule,
   },
   mastRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SIDE },
-  mastSide: { flex: 1, alignItems: 'flex-end' },
+  mastSide: { flex: 1, alignItems: 'flex-start' }, // start = right edge in RTL
   mastActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm },
-  mastWeekday: { fontFamily: fonts.semibold, fontSize: 13, color: colors.onMasthead, textAlign: 'right' },
-  mastDate: { fontFamily: fonts.regular, fontSize: 12, color: colors.onMastheadSoft, textAlign: 'right' },
+  mastWeekday: { fontFamily: fonts.semibold, fontSize: 13, color: colors.onMasthead, textAlign: 'auto', writingDirection: 'rtl' },
+  mastDate: { fontFamily: fonts.regular, fontSize: 12, color: colors.onMastheadSoft, textAlign: 'auto', writingDirection: 'rtl' },
   logo: { width: 132, height: 84 },
   mastBtn: {
     width: 40, height: 40, borderRadius: 20,
@@ -547,22 +555,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md, paddingTop: spacing.xl, paddingBottom: spacing.ms,
     gap: 6,
   },
-  onPhotoTitle: { fontFamily: fonts.bold, fontSize: 18, lineHeight: 28, color: colors.white, textAlign: 'right', writingDirection: 'rtl' },
-  onPhotoSub: { fontFamily: fonts.regular, fontSize: 13, color: colors.onMastheadSoft, textAlign: 'right', writingDirection: 'rtl' },
+  onPhotoTitle: { fontFamily: fonts.bold, fontSize: 18, lineHeight: 28, color: colors.white, textAlign: 'auto', writingDirection: 'rtl' },
+  onPhotoSub: { fontFamily: fonts.regular, fontSize: 13, color: colors.onMastheadSoft, textAlign: 'auto', writingDirection: 'rtl' },
   onPhotoMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
   onPhotoMetaText: { fontFamily: fonts.regular, fontSize: 12, color: colors.onMastheadSoft },
   adLabel: {
-    position: 'absolute', top: spacing.sm, right: spacing.sm,
+    position: 'absolute', top: spacing.sm, start: spacing.sm, // reading side: right in RTL
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.sm,
     paddingHorizontal: 8, paddingVertical: 3,
   },
   videoBadge: {
-    position: 'absolute', top: spacing.sm, left: spacing.sm,
+    position: 'absolute', top: spacing.sm, end: spacing.sm,
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: radius.sm,
     paddingHorizontal: 8, paddingVertical: 3,
   },
+
+  // Carousel cards (always laid out LTR, see FeaturedCarousel)
+  alignRight: { alignSelf: 'flex-end' },
+  rowFromRight: { flexDirection: 'row-reverse', alignSelf: 'flex-end' },
+  videoBadgeLeft: { start: undefined, end: undefined, left: spacing.sm, right: undefined },
 
   // Carousel dots
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: spacing.ms },
@@ -592,5 +605,5 @@ const styles = StyleSheet.create({
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: spacing.ms, height: 44,
   },
-  searchInput: { flex: 1, height: '100%', fontFamily: fonts.regular, fontSize: 16, color: colors.ink, textAlign: 'right', writingDirection: 'rtl' },
+  searchInput: { flex: 1, height: '100%', fontFamily: fonts.regular, fontSize: 16, color: colors.ink, textAlign: 'auto', writingDirection: 'rtl' },
 });

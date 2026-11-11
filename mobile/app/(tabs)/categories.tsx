@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, Pressable, FlatList, ActivityIndicator } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { api, Article } from '@/lib/api';
 import { ArticleRow } from '@/components/ArticleRow';
@@ -11,6 +12,8 @@ export default function CategoriesScreen() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  // Deep link: /categories?c=تنويهات opens that category directly.
+  const { c } = useLocalSearchParams<{ c?: string }>();
 
   const fetchByCategory = async (category: string) => {
     setSelected(category);
@@ -27,6 +30,11 @@ export default function CategoriesScreen() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (c && CATEGORIES.some((cat) => cat.name === c) && c !== selected) fetchByCategory(c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c]);
 
   const header = (
     <View style={{ gap: spacing.md }}>

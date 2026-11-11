@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     heroImage: { width: '100%', height: IS_WEB ? 280 : H * 0.4 },
     heroOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%' },
 
-    floatingBack: { position: 'absolute', top: IS_WEB ? 14 : 50, right: 16, zIndex: 50 },
+    floatingBack: { position: 'absolute', top: IS_WEB ? 14 : 50, start: 16, zIndex: 50 }, // start = right in RTL
     floatingBackBtn: {
         width: 40, height: 40, borderRadius: 20,
         backgroundColor: 'rgba(0,0,0,0.4)',
@@ -307,15 +307,15 @@ const styles = StyleSheet.create({
 
     header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 4, gap: 12 },
     adBadge: {
-        flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-end',
+        flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
         backgroundColor: C.red + '22', borderRadius: 20,
         paddingHorizontal: 12, paddingVertical: 6,
         borderWidth: 1, borderColor: C.red + '44',
     },
     adBadgeText: { color: C.red, fontSize: 12, fontFamily: fonts.bold },
-    title: { color: C.textPrimary, fontSize: 23, fontFamily: fonts.bold, textAlign: 'right', lineHeight: 36 },
+    title: { color: C.textPrimary, fontSize: 23, fontFamily: fonts.bold, textAlign: 'auto', writingDirection: 'rtl', lineHeight: 36 },
     divider: { height: 2, borderRadius: 2 },
-    shortDesc: { color: C.textSecondary, fontSize: 15, fontFamily: fonts.regular, textAlign: 'right', lineHeight: 25 },
+    shortDesc: { color: C.textSecondary, fontSize: 15, fontFamily: fonts.regular, textAlign: 'auto', writingDirection: 'rtl', lineHeight: 25 },
 
     contentWrap: {
         marginHorizontal: 4, marginTop: 10,
