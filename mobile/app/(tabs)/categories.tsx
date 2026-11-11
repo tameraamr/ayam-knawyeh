@@ -4,18 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { api, Article } from '@/lib/api';
 import { ArticleRow } from '@/components/ArticleRow';
 import { categoryColor, colors, radius, spacing, tint, type, fonts } from '@/theme';
-
-type IconName = React.ComponentProps<typeof Ionicons>['name'];
-
-const CATEGORIES: { name: string; icon: IconName }[] = [
-  { name: 'اخبار البلد', icon: 'newspaper' },
-  { name: 'تنويهات', icon: 'notifications' },
-  { name: 'افراح', icon: 'ribbon' },
-  { name: 'مواليد جدد', icon: 'gift' },
-  { name: 'ابناء كفركنا', icon: 'people' },
-  { name: 'يصادف اليوم', icon: 'calendar' },
-  { name: 'محلات تجارية', icon: 'storefront' },
-];
+import { CATEGORIES } from '@/lib/categories';
 
 export default function CategoriesScreen() {
   const [selected, setSelected] = useState<string | null>(null);

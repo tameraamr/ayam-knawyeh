@@ -3,6 +3,7 @@
 // - Android emulator → 10.0.2.2:5000 (emulator's alias for host machine)
 // - Real device / prod → set EXPO_PUBLIC_API_URL in .env
 import { Platform } from 'react-native';
+import { getDeviceId } from './device';
 
 function getApiBase(): string {
   // If this is a production build (APK/IPA), always force the cloud database
@@ -108,7 +109,8 @@ export const api = {
   },
 
   getArticle: async (id: string): Promise<{ article: Article }> => {
-    const res = await fetchWithRetry(`${API_BASE}/api/articles/${id}?_t=${Date.now()}`);
+    // noview=1: the view is counted separately (once per device) by recordView().
+    const res = await fetchWithRetry(`${API_BASE}/api/articles/${id}?noview=1&_t=${Date.now()}`);
     if (!res.ok) throw new Error('فشل جلب الخبر');
     const data = await res.json();
     data.article.imageUrl = fixUrl(data.article.imageUrl);
@@ -130,12 +132,27 @@ export const api = {
     return data;
   },
 
-  togglePushSubscription: async (token: string, subscribe: boolean) => {
+  /** Counts a view of this article once per phone. Never throws: views are best-effort. */
+  recordView: async (id: string): Promise<void> => {
+    try {
+      const deviceId = await getDeviceId();
+      await fetch(`${API_BASE}/api/articles/${id}/view`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId }),
+      });
+    } catch {
+      // ignore: a missed view is not worth bothering the reader
+    }
+  },
+
+  /** `categories`: the categories to be notified about; [] means all of them. */
+  togglePushSubscription: async (token: string, subscribe: boolean, categories?: string[]) => {
     const endpoint = subscribe ? 'subscribe' : 'unsubscribe';
     const res = await fetch(`${API_BASE}/api/notifications/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, platform: Platform.OS }),
+      body: JSON.stringify({ token, platform: Platform.OS, ...(categories ? { categories } : {}) }),
     });
     if (!res.ok) throw new Error('Failed to toggle subscription');
     return res.json();

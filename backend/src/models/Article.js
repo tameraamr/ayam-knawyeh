@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const CATEGORIES = ['اخبار البلد', 'مواليد جدد', 'ابناء كفركنا', 'افراح', 'يصادف اليوم', 'محلات تجارية', 'تنويهات'];
+
 const articleSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   description: { type: String, required: true, trim: true },
@@ -9,7 +11,7 @@ const articleSchema = new mongoose.Schema({
   author: { type: String, default: 'المحرر' },
   category: {
     type: String,
-    enum: ['اخبار البلد', 'مواليد جدد', 'ابناء كفركنا', 'افراح', 'يصادف اليوم', 'محلات تجارية', 'تنويهات'],
+    enum: CATEGORIES,
     default: 'اخبار البلد'
   },
   isPublished: { type: Boolean, default: true },
@@ -23,3 +25,4 @@ const articleSchema = new mongoose.Schema({
 articleSchema.index({ title: 'text', description: 'text', content: 'text' });
 
 module.exports = mongoose.model('Article', articleSchema);
+module.exports.CATEGORIES = CATEGORIES;

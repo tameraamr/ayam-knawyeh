@@ -5,6 +5,7 @@ import {
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { api, Ad } from '@/lib/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -110,13 +111,18 @@ function VideoPlayer({ uri }: { uri: string }) {
             <video src={uri} controls style={{ width: '100%', maxHeight: 320, borderRadius: 16, backgroundColor: '#000', display: 'block' }} />
         );
     }
-    const { Video, ResizeMode } = require('expo-av');
+    return <NativeVideoPlayer uri={uri} />;
+}
+
+function NativeVideoPlayer({ uri }: { uri: string }) {
+    const player = useVideoPlayer(uri);
     return (
-        <Video
-            source={{ uri }}
-            style={{ width: W, height: H * 0.35 }}
-            useNativeControls
-            resizeMode={ResizeMode.COVER}
+        <VideoView
+            player={player}
+            style={{ width: W, height: H * 0.35, backgroundColor: '#000' }}
+            contentFit="contain"
+            nativeControls
+            allowsFullscreen
         />
     );
 }

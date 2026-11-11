@@ -13,7 +13,6 @@ import {
 } from '@expo-google-fonts/ibm-plex-sans-arabic';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Audio } from 'expo-av';
 import { registerForPushNotifications } from '@/lib/notifications';
 import { colors, fonts } from '@/theme';
 
@@ -80,13 +79,8 @@ export default function RootLayout() {
   }, [ready]);
 
   useEffect(() => {
-    // Configure audio to play even if the physical silent switch is on (iOS)
-    Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: false,
-      shouldDuckAndroid: true,
-      playThroughEarpieceAndroid: false,
-    });
+    // Audio: expo-video sets the iOS audio session to "playback" itself, so videos
+    // are heard even with the silent switch on (what expo-av's audio mode did before).
 
     registerForPushNotifications().then(token => {
       if (token) console.log('Push token:', token);

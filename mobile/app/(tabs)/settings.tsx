@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Image, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Image, Switch, Alert } from 'react-native';
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
@@ -6,9 +6,12 @@ import Constants from 'expo-constants';
 import {
   getNotificationsPreference,
   saveNotificationsPreference,
+  getCategoryPreference,
+  saveCategoryPreference,
   showNotificationPermissionAlert,
 } from '@/lib/notificationPrefs';
-import { colors, fonts, radius, spacing, type } from '@/theme';
+import { CATEGORIES } from '@/lib/categories';
+import { categoryColor, colors, fonts, radius, spacing, type } from '@/theme';
 
 const FRONTEND_URL = __DEV__
   ? (process.env.EXPO_PUBLIC_FRONTEND_URL || 'http://10.0.2.2:3000')
@@ -19,14 +22,29 @@ type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [categories, setCategories] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  // Read the real preference every time this tab is opened (it can change from the home bell).
+  // Read the real preferences every time this tab is opened (they can change from the home bell).
   useFocusEffect(
     useCallback(() => {
       getNotificationsPreference().then(setNotificationsEnabled);
+      getCategoryPreference().then(setCategories);
     }, [])
   );
+
+  const toggleCategory = async (name: string, on: boolean) => {
+    const next = on ? [...categories, name] : categories.filter((c) => c !== name);
+    if (next.length === 0) {
+      Alert.alert('اختر تصنيفاً واحداً على الأقل', 'لإيقاف جميع الإشعارات استخدم زر «إشعارات الأخبار العاجلة» في الأعلى.');
+      return;
+    }
+    setCategories(next);
+    setSaving(true);
+    const result = await saveCategoryPreference(next);
+    setSaving(false);
+    if (result === 'no-permission') showNotificationPermissionAlert();
+  };
 
   const handleToggleNotifications = async (value: boolean) => {
     setNotificationsEnabled(value);
@@ -70,6 +88,30 @@ export default function SettingsScreen() {
           />
         </View>
       </Section>
+
+      {notificationsEnabled ? (
+        <Section title="ما الذي تريد أن يصلك؟">
+          {CATEGORIES.map((cat, i) => (
+            <View key={cat.name}>
+              {i > 0 ? <Divider /> : null}
+              <View style={styles.row}>
+                <View style={styles.rowLabel}>
+                  <Ionicons name={cat.icon} size={18} color={categoryColor(cat.name)} />
+                  <Text style={styles.label}>{cat.name}</Text>
+                </View>
+                <Switch
+                  value={categories.includes(cat.name)}
+                  onValueChange={(on) => toggleCategory(cat.name, on)}
+                  disabled={saving}
+                  trackColor={{ false: colors.line, true: colors.masthead }}
+                  ios_backgroundColor={colors.line}
+                  accessibilityLabel={`إشعارات ${cat.name}`}
+                />
+              </View>
+            </View>
+          ))}
+        </Section>
+      ) : null}
 
       <Section title="تواصل معنا">
         <Pressable onPress={openWhatsApp} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>

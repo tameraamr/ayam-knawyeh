@@ -51,7 +51,7 @@ export default function NotificationsPage() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold text-white">الإشعارات</h1>
-        <p className="text-gray-400 mt-1">إرسال إشعارات فورية لجميع مستخدمي التطبيق</p>
+        <p className="text-gray-400 mt-1">إرسال إشعارات فورية لمستخدمي التطبيق. إذا اخترت خبراً، يصل الإشعار فقط لمن يتابع تصنيفه؛ بدون خبر يصل للجميع.</p>
       </div>
 
       {/* Firebase Notice */}

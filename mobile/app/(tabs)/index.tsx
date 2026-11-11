@@ -8,6 +8,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api, Article, Ad } from '@/lib/api';
@@ -101,8 +102,16 @@ function VideoPreview({ uri, height }: { uri: string; height: number }) {
       <video src={uri} autoPlay loop muted playsInline style={{ width: '100%', height, objectFit: 'cover', display: 'block' }} />
     );
   }
-  const { Video, ResizeMode } = require('expo-av');
-  return <Video source={{ uri }} style={{ width: '100%', height }} resizeMode={ResizeMode.COVER} shouldPlay isLooping isMuted />;
+  return <NativeVideoPreview uri={uri} height={height} />;
+}
+
+function NativeVideoPreview({ uri, height }: { uri: string; height: number }) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
+  return <VideoView player={player} style={{ width: '100%', height }} contentFit="cover" nativeControls={false} />;
 }
 
 function VideoBadge() {

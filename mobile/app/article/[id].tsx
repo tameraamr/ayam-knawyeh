@@ -5,25 +5,28 @@ import {
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { api, Article } from '@/lib/api';
 import { formatFullDate } from '@/lib/date';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryChip } from '@/components/CategoryChip';
+import { DEFAULT_SCALE_INDEX, TEXT_SCALES, getTextScaleIndex, saveTextScaleIndex } from '@/lib/textSize';
 import { colors, fonts, radius, spacing, type } from '@/theme';
 
 // Article body is HTML from the admin editor, rendered in a WebView with the app's look.
-const ARTICLE_STYLE = `
+// `scale` follows the reader's A−/A+ choice.
+const articleStyle = (scale: number) => `
   <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'IBM Plex Sans Arabic', -apple-system, 'Segoe UI', sans-serif;
       background: ${colors.surface}; color: ${colors.ink};
-      font-size: 17px; line-height: 1.9; direction: rtl;
+      font-size: ${Math.round(17 * scale)}px; line-height: 1.9; direction: rtl;
     }
     p { margin-bottom: 14px; }
     h1,h2,h3 { color: ${colors.ink}; margin: 18px 0 10px; line-height: 1.45; font-weight: 700; }
-    h1 { font-size: 22px; } h2 { font-size: 19px; } h3 { font-size: 17px; }
+    h1 { font-size: 1.3em; } h2 { font-size: 1.12em; } h3 { font-size: 1em; }
     img { max-width: 100%; border-radius: 10px; margin: 10px 0; display: block; }
     a { color: ${colors.masthead}; }
     blockquote { border-right: 4px solid ${colors.goldRule}; padding: 4px 12px 4px 0; color: ${colors.soft}; margin: 14px 0; }
@@ -34,22 +37,22 @@ const ARTICLE_STYLE = `
 `;
 
 // Web: render HTML natively in a div
-function WebArticleContent({ html }: { html: string }) {
+function WebArticleContent({ html, scale }: { html: string; scale: number }) {
   return (
     <div
-      dangerouslySetInnerHTML={{ __html: ARTICLE_STYLE + html }}
+      dangerouslySetInnerHTML={{ __html: articleStyle(scale) + html }}
       style={{ direction: 'rtl', color: colors.ink, lineHeight: 1.9 }}
     />
   );
 }
 
 // Native: use WebView lazily (only imported on native)
-function NativeArticleContent({ html }: { html: string }) {
+function NativeArticleContent({ html, scale }: { html: string; scale: number }) {
   const [height, setHeight] = useState(200);
   const { WebView } = require('react-native-webview');
   const fullHtml = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  ${ARTICLE_STYLE}</head><body>${html}
+  ${articleStyle(scale)}</head><body>${html}
   <script>
     function updateHeight() {
       window.ReactNativeWebView.postMessage(Math.max(document.body.scrollHeight, document.documentElement.scrollHeight));
@@ -79,9 +82,39 @@ function NativeArticleContent({ html }: { html: string }) {
   );
 }
 
-function ArticleContent({ html }: { html: string }) {
-  if (Platform.OS === 'web') return <WebArticleContent html={html} />;
-  return <NativeArticleContent html={html} />;
+function ArticleContent({ html, scale }: { html: string; scale: number }) {
+  if (Platform.OS === 'web') return <WebArticleContent html={html} scale={scale} />;
+  return <NativeArticleContent html={html} scale={scale} />;
+}
+
+// ── A− / A+ in the header ────────────────────────────────────────────────────────
+function TextSizeButtons({ index, onChange }: { index: number; onChange: (i: number) => void }) {
+  const canSmaller = index > 0;
+  const canBigger = index < TEXT_SCALES.length - 1;
+  return (
+    <View style={styles.sizeBtns}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="تصغير الخط"
+        disabled={!canSmaller}
+        hitSlop={6}
+        onPress={() => onChange(index - 1)}
+        style={({ pressed }) => [styles.sizeBtn, pressed && styles.sizeBtnPressed, !canSmaller && styles.sizeBtnOff]}
+      >
+        <Text style={[styles.sizeTxt, { fontSize: 14 }]}>أ-</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="تكبير الخط"
+        disabled={!canBigger}
+        hitSlop={6}
+        onPress={() => onChange(index + 1)}
+        style={({ pressed }) => [styles.sizeBtn, pressed && styles.sizeBtnPressed, !canBigger && styles.sizeBtnOff]}
+      >
+        <Text style={[styles.sizeTxt, { fontSize: 19 }]}>أ+</Text>
+      </Pressable>
+    </View>
+  );
 }
 
 // ── Video player ─────────────────────────────────────────────────────────────────
@@ -92,14 +125,20 @@ function VideoPlayer({ uri }: { uri: string }) {
       <video src={uri} controls style={{ width: '100%', maxHeight: 320, backgroundColor: '#000', display: 'block' }} />
     );
   }
-  const { Video, ResizeMode } = require('expo-av');
+  return <NativeVideoPlayer uri={uri} />;
+}
+
+// Tap to play, with the system controls (fullscreen, seek) — no autoplay.
+function NativeVideoPlayer({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri);
   const { width: W } = Dimensions.get('window');
   return (
-    <Video
-      source={{ uri }}
-      style={{ width: W, height: W * 0.65 }}
-      useNativeControls
-      resizeMode={ResizeMode.COVER}
+    <VideoView
+      player={player}
+      style={{ width: W, height: W * 0.65, backgroundColor: '#000' }}
+      contentFit="contain"
+      nativeControls
+      allowsFullscreen
     />
   );
 }
@@ -109,6 +148,21 @@ export default function ArticleScreen() {
   const navigation = useNavigation();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
+  const [scaleIndex, setScaleIndex] = useState(DEFAULT_SCALE_INDEX);
+  const scale = TEXT_SCALES[scaleIndex];
+
+  // Remembered text size + the A−/A+ buttons in the header.
+  useEffect(() => { getTextScaleIndex().then(setScaleIndex); }, []);
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TextSizeButtons
+          index={scaleIndex}
+          onChange={(i) => { setScaleIndex(i); saveTextScaleIndex(i); }}
+        />
+      ),
+    });
+  }, [navigation, scaleIndex]);
 
   useEffect(() => {
     if (!id) return;
@@ -116,6 +170,7 @@ export default function ArticleScreen() {
       .then(data => {
         setArticle(data.article);
         navigation.setOptions({ title: '' });
+        api.recordView(id); // once per phone; fire and forget
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -193,7 +248,9 @@ export default function ArticleScreen() {
           <Text style={type.meta}>{formatFullDate(article.createdAt)}</Text>
         </View>
 
-        <Text style={type.display}>{article.title}</Text>
+        <Text style={[type.display, { fontSize: type.display.fontSize * scale, lineHeight: type.display.lineHeight * scale }]}>
+          {article.title}
+        </Text>
 
         {/* Author, views */}
         <View style={styles.byline}>
@@ -218,12 +275,14 @@ export default function ArticleScreen() {
 
         {/* Description */}
         {article.description && article.description !== article.title ? (
-          <Text style={[type.body, styles.desc]}>{article.description}</Text>
+          <Text style={[type.body, styles.desc, { fontSize: type.body.fontSize * scale, lineHeight: type.body.lineHeight * scale }]}>
+            {article.description}
+          </Text>
         ) : null}
         <View style={styles.divider} />
 
         {/* Rich Content */}
-        <ArticleContent html={article.content} />
+        <ArticleContent html={article.content} scale={scale} />
 
         {/* Tags */}
         {article.tags.length > 0 && (
@@ -259,6 +318,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
   },
   desc: { color: colors.soft, fontFamily: fonts.medium },
+  sizeBtns: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  sizeBtn: {
+    minWidth: 38, height: 32, borderRadius: radius.md,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.14)',
+  },
+  sizeBtnPressed: { backgroundColor: 'rgba(255,255,255,0.28)' },
+  sizeBtnOff: { opacity: 0.4 },
+  sizeTxt: { fontFamily: fonts.bold, color: colors.onMasthead },
   divider: { height: 1, backgroundColor: colors.line },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
   tag: { backgroundColor: colors.page, borderRadius: radius.sm, paddingHorizontal: 10, paddingVertical: 5 },

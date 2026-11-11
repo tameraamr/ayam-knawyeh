@@ -1,8 +1,10 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Article = require('../models/Article');
+const ArticleView = require('../models/ArticleView');
 const authMiddleware = require('../middleware/auth');
 const { sendPushNotifications } = require('../services/expoPush');
-const PushToken = require('../models/PushToken');
+const { getActiveTokens } = require('../services/subscribers');
 
 const router = express.Router();
 
@@ -52,18 +54,41 @@ router.get('/all', authMiddleware, async (req, res) => {
 });
 
 // GET /api/articles/:id — single article (public)
+// Views: new app versions count through POST /:id/view (once per device) and pass
+// ?noview=1 here. The admin (Authorization header) and the share page (?noview=1)
+// never count. Older app versions already in the stores still count here as before.
 router.get('/:id', async (req, res) => {
   try {
-    const article = await Article.findById(req.params.id);
+    const skipView = req.query.noview === '1' || !!req.headers.authorization;
+    const article = skipView
+      ? await Article.findById(req.params.id)
+      : await Article.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true });
     if (!article) return res.status(404).json({ error: 'الخبر غير موجود' });
-
-    // Increment views
-    article.views += 1;
-    await article.save();
 
     res.json({ article });
   } catch (err) {
     res.status(500).json({ error: 'خطأ في جلب الخبر' });
+  }
+});
+
+// POST /api/articles/:id/view — count one view per device (public, called by the app)
+router.post('/:id/view', async (req, res) => {
+  const device = typeof req.body?.deviceId === 'string' ? req.body.deviceId.trim() : '';
+  if (!device || device.length > 64 || !mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({ error: 'طلب غير صالح' });
+  }
+  try {
+    const result = await ArticleView.updateOne(
+      { article: req.params.id, device },
+      { $setOnInsert: { article: req.params.id, device } },
+      { upsert: true }
+    );
+    const isNew = result.upsertedCount > 0;
+    if (isNew) await Article.updateOne({ _id: req.params.id }, { $inc: { views: 1 } });
+    res.json({ counted: isNew });
+  } catch (err) {
+    if (err.code === 11000) return res.json({ counted: false }); // same device, concurrent request
+    res.status(500).json({ error: 'خطأ في تسجيل المشاهدة' });
   }
 });
 
@@ -85,9 +110,9 @@ router.post('/', authMiddleware, async (req, res) => {
     // Send push notification if requested
     if (sendNotification && article.isPublished) {
       try {
-        const tokenDocs = await PushToken.find({ active: true });
-        const tokens = tokenDocs.map(doc => doc.token);
-        
+        // Only devices that follow this category (or all categories)
+        const tokens = await getActiveTokens(article.category);
+
         if (tokens.length > 0) {
           await sendPushNotifications(tokens, title, description, { articleId: article._id.toString() });
           console.log(`📨 Article notification sent to ${tokens.length} devices`);
@@ -123,6 +148,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const article = await Article.findByIdAndDelete(req.params.id);
     if (!article) return res.status(404).json({ error: 'الخبر غير موجود' });
+    await ArticleView.deleteMany({ article: article._id });
     res.json({ message: 'تم حذف الخبر بنجاح' });
   } catch (err) {
     res.status(500).json({ error: 'خطأ في حذف الخبر' });

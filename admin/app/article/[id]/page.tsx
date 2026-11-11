@@ -10,7 +10,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   try {
-    const res = await fetch(`${API_URL}/api/articles/${id}`);
+    const res = await fetch(`${API_URL}/api/articles/${id}?noview=1`);
     const data = await res.json();
     const article = data.article;
     

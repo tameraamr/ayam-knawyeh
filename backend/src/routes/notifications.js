@@ -2,6 +2,7 @@ const express = require('express');
 const authMiddleware = require('../middleware/auth');
 const { sendPushNotifications } = require('../services/expoPush');
 const PushToken = require('../models/PushToken');
+const { getActiveTokens } = require('../services/subscribers');
 const Article = require('../models/Article');
 const Ad = require('../models/Ad');
 
@@ -15,9 +16,13 @@ router.post('/send', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'العنوان والرسالة مطلوبان' });
     }
 
-    // Fetch all active tokens from the database
-    const tokenDocs = await PushToken.find({ active: true });
-    const tokens = tokenDocs.map(doc => doc.token);
+    // Linked to an article → only devices following its category; otherwise everyone.
+    let category;
+    if (articleId) {
+      const article = await Article.findById(articleId).select('category');
+      category = article?.category;
+    }
+    const tokens = await getActiveTokens(category);
 
     if (tokens.length === 0) {
       return res.json({ success: false, message: 'لا يوجد مشتركين حاليا' });
@@ -61,14 +66,21 @@ router.get('/stats', authMiddleware, async (req, res) => {
 
 // POST /api/notifications/subscribe (public — called from mobile app)
 router.post('/subscribe', async (req, res) => {
-  const { token, platform } = req.body;
+  const { token, platform, categories } = req.body;
   if (!token) return res.status(400).json({ error: 'Token is required' });
+
+  const update = { token, platform: platform || 'android', active: true };
+  // Newer app versions send the chosen categories ([] = all). Older ones don't send
+  // the field, and then we leave whatever is stored untouched.
+  if (Array.isArray(categories)) {
+    update.categories = categories.filter((c) => Article.CATEGORIES.includes(c));
+  }
 
   try {
     // Upsert: create if not exists, update if exists
     await PushToken.findOneAndUpdate(
       { token },
-      { token, platform: platform || 'android', active: true },
+      update,
       { upsert: true, new: true }
     );
     console.log(`✅ Device subscribed: ${token.substring(0, 20)}...`);
