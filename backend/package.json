@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "dev:install": "npm install && npm run dev"
+    "dev:install": "npm install && npm run dev",
+    "test": "node test/integration.test.js"
   },
   "keywords": [
     "news",
@@ -33,6 +34,12 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^10.4.3",
     "nodemon": "^3.1.14"
+  },
+  "config": {
+    "mongodbMemoryServer": {
+      "disablePostinstall": "1"
+    }
   }
 }
