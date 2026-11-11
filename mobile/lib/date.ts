@@ -7,6 +7,17 @@ const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
+// iOS (Hermes) ignores the "-u-nu-latn" part and returns Arabic-Indic digits (١١).
+// Convert them so dates always use 0-9 like the rest of the app.
+export function toLatinDigits(s: string): string {
+  return s.replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 0x0660));
+}
+
+/** Formats with the Arabic locale, always returning Western digits. */
+export function formatArabicDate(d: Date, options: Intl.DateTimeFormatOptions): string {
+  return toLatinDigits(new Intl.DateTimeFormat(LOCALE, options).format(d));
+}
+
 function toDate(value: string | Date): Date | null {
   const d = value instanceof Date ? value : new Date(value);
   return isNaN(d.getTime()) ? null : d;
@@ -17,18 +28,18 @@ export function formatShortDate(value: string | Date): string {
   const d = toDate(value);
   if (!d) return '';
   const sameYear = d.getFullYear() === new Date().getFullYear();
-  return new Intl.DateTimeFormat(LOCALE, {
+  return formatArabicDate(d, {
     day: 'numeric',
     month: 'long',
     ...(sameYear ? {} : { year: 'numeric' }),
-  }).format(d);
+  });
 }
 
 /** "27 أبريل 2026" — full date for the article page. */
 export function formatFullDate(value: string | Date): string {
   const d = toDate(value);
   if (!d) return '';
-  return new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+  return formatArabicDate(d, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 // Arabic counting forms: 1 → singular, 2 → dual, 3–10 → plural, 11+ → singular with number.

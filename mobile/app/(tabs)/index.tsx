@@ -16,7 +16,7 @@ import {
   saveNotificationsPreference,
   showNotificationPermissionAlert,
 } from '@/lib/notificationPrefs';
-import { formatRelativeDate } from '@/lib/date';
+import { formatRelativeDate, formatArabicDate } from '@/lib/date';
 
 // Simple fade-in wrapper using built-in Animated
 function FadeIn({ children, delay = 0, style }: { children: React.ReactNode; delay?: number; style?: any }) {
@@ -78,12 +78,12 @@ function HeroBanner({
   onToggleNotifications: () => void
 }) {
   // ar-EG-u-nu-latn forces international numbers (1, 2, 3) but keeps Arabic language (أبريل, الخميس)
-  const dateStr = new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
+  const dateStr = formatArabicDate(new Date(), {
     weekday: 'long',
     day: 'numeric',
     month: 'short',
     year: 'numeric'
-  }).format(new Date());
+  });
 
   return (
     <FadeIn delay={0}>
