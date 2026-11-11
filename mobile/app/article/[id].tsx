@@ -3,6 +3,7 @@ import {
   ActivityIndicator, Share, Image, Platform, Dimensions, Alert,
 } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -158,6 +159,7 @@ function NativeVideoPlayer({ uri }: { uri: string }) {
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [scaleIndex, setScaleIndex] = useState(DEFAULT_SCALE_INDEX);
@@ -227,7 +229,9 @@ export default function ArticleScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }} nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+    // paddingBottom: on Android the app draws under the system navigation bar (edge-to-edge),
+    // so the footer needs the bottom inset to stay visible above the buttons/gesture bar.
+    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom }} nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
       {/* Cover */}
       {article.videoUrl ? (
         <View style={{ width: '100%' }}>

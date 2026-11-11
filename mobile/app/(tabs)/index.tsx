@@ -425,7 +425,7 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          <ScrollView style={styles.screen} contentContainerStyle={{ padding: SIDE }} keyboardShouldPersistTaps="handled">
+          <ScrollView style={styles.screen} contentContainerStyle={{ padding: SIDE, paddingBottom: SIDE + insets.bottom }} keyboardShouldPersistTaps="handled">
             {isSearching ? (
               <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 40 }} />
             ) : searchResults.length > 0 ? (

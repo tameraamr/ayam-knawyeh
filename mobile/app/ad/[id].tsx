@@ -187,7 +187,7 @@ export default function AdDetailScreen() {
                 style={{ flex: 1 }} 
                 contentContainerStyle={{ 
                     flexGrow: 1, 
-                    paddingBottom: 40,
+                    paddingBottom: 40 + insets.bottom, // Android draws under the navigation bar
                     paddingTop: insets.top + 12
                 }} 
                 showsVerticalScrollIndicator={false} 
