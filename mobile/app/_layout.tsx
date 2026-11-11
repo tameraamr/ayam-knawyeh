@@ -35,6 +35,19 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 // The backend sends { articleId } for news and { adId } for ads (see backend/src/routes).
 let lastHandledNotificationId: string | null = null;
 
+// On a cold start (app closed, user taps the notification) this runs before Expo
+// Router's navigator is ready, and router.push() then throws "Attempted to navigate
+// before mounting the Root Layout" — which crashed the release app. So if navigation
+// isn't ready yet, retry shortly instead of throwing (up to ~3 s).
+function navigateWhenReady(path: string, attempt = 0) {
+  try {
+    router.push(path as any);
+  } catch (e) {
+    if (attempt < 30) setTimeout(() => navigateWhenReady(path, attempt + 1), 100);
+    else console.warn('Could not open notification target', path, e);
+  }
+}
+
 function openFromNotification(response: Notifications.NotificationResponse | null) {
   if (!response) return;
   const id = response.notification.request.identifier;
@@ -43,9 +56,9 @@ function openFromNotification(response: Notifications.NotificationResponse | nul
 
   const data = (response.notification.request.content.data ?? {}) as Record<string, unknown>;
   if (typeof data.articleId === 'string' && data.articleId) {
-    router.push(`/article/${data.articleId}`);
+    navigateWhenReady(`/article/${data.articleId}`);
   } else if (typeof data.adId === 'string' && data.adId) {
-    router.push(`/ad/${data.adId}`);
+    navigateWhenReady(`/ad/${data.adId}`);
   }
 }
 
