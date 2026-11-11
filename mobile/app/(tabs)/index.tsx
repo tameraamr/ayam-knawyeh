@@ -1,6 +1,6 @@
 import {
   View, Text, ScrollView, StyleSheet, Pressable, Image,
-  Dimensions, Linking, ActivityIndicator, RefreshControl, Platform,
+  Dimensions, ActivityIndicator, RefreshControl, Platform,
   Animated, Alert, TextInput, Modal, KeyboardAvoidingView, FlatList,
   type NativeSyntheticEvent, type NativeScrollEvent,
 } from 'react-native';
@@ -9,7 +9,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api, Article, Ad } from '@/lib/api';
 import {
@@ -18,9 +18,11 @@ import {
   showNotificationPermissionAlert,
 } from '@/lib/notificationPrefs';
 import { formatRelativeDate, formatArabicDate } from '@/lib/date';
-import { colors, fonts, radius, spacing, type } from '@/theme';
+import { colors, fonts, isDark, radius, spacing, type } from '@/theme';
+import { setThemePreference } from '@/lib/themePreference';
 import { ArticleRow } from '@/components/ArticleRow';
 import { CategoryChip } from '@/components/CategoryChip';
+import { Footer } from '@/components/Footer';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const IS_WEB = Platform.OS === 'web';
@@ -28,7 +30,6 @@ const SIDE = spacing.md;                       // screen edge padding
 const CARD_WIDTH = SCREEN_WIDTH - SIDE * 2;
 const MEDIA_HEIGHT = IS_WEB ? 220 : Math.round(SCREEN_HEIGHT * 0.27);
 const CAROUSEL_COUNT = 5;
-const WHATSAPP_NUMBER = '+972543854441';
 // The "إعلان" label sits on a white pill over the photo in both themes, so its text stays dark.
 const AD_LABEL_INK = '#1f1819';
 
@@ -60,6 +61,15 @@ function Masthead({
 
         {/* Left (RTL end): actions */}
         <View style={[styles.mastSide, styles.mastActions]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}
+            onPress={() => setThemePreference(isDark ? 'light' : 'dark')}
+            hitSlop={6}
+            style={({ pressed }) => [styles.mastBtn, styles.mastBtnSmall, pressed && styles.mastBtnPressed]}
+          >
+            <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={16} color={colors.onMasthead} />
+          </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={notificationsEnabled ? 'إيقاف الإشعارات' : 'تفعيل الإشعارات'}
@@ -244,59 +254,6 @@ function FeaturedCarousel({ articles }: { articles: Article[] }) {
           <View key={a._id} style={[styles.dot, i === activeIndex && styles.dotActive]} />
         ))}
       </View>
-    </View>
-  );
-}
-
-// ─── ④ Footer: WhatsApp, socials, credits ─────────────────────────────────────
-async function openSocial(appUrl: string, webUrl: string) {
-  try {
-    if (await Linking.canOpenURL(appUrl)) await Linking.openURL(appUrl);
-    else await Linking.openURL(webUrl);
-  } catch {
-    Linking.openURL(webUrl);
-  }
-}
-
-const SOCIALS = [
-  { icon: 'facebook-f', label: 'Facebook', app: 'fb://facewebmodal/f?href=https://facebook.com/kanna.days2', web: 'https://facebook.com/kanna.days2' },
-  { icon: 'instagram', label: 'Instagram', app: 'instagram://user?username=ayam.knawyeh', web: 'https://instagram.com/ayam.knawyeh' },
-  { icon: 'tiktok', label: 'TikTok', app: 'tiktok://@ayamknaweyh', web: 'https://tiktok.com/@ayamknaweyh' },
-];
-
-function Footer() {
-  return (
-    <View style={[styles.padded, styles.footer]}>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => openSocial(`whatsapp://send?phone=${WHATSAPP_NUMBER}`, `https://wa.me/${WHATSAPP_NUMBER.replace('+', '')}`)}
-        style={({ pressed }) => [styles.whatsapp, pressed && { opacity: 0.85 }]}
-      >
-        <FontAwesome5 name="whatsapp" size={20} color={colors.white} />
-        <Text style={[type.button, { color: colors.white }]}>أرسل لنا خبراً عبر واتساب</Text>
-      </Pressable>
-
-      <View style={styles.socialRow}>
-        {SOCIALS.map((s) => (
-          <Pressable
-            key={s.label}
-            accessibilityRole="link"
-            accessibilityLabel={s.label}
-            onPress={() => openSocial(s.app, s.web)}
-            style={({ pressed }) => [styles.socialBtn, pressed && styles.cardPressed]}
-          >
-            <FontAwesome5 name={s.icon as any} size={15} color={colors.accent} />
-            <Text style={[type.label, { color: colors.ink }]}>{s.label}</Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <Text style={[type.meta, styles.center]}>© {new Date().getFullYear()} أيام كناوية · جميع الحقوق محفوظة</Text>
-      <Pressable accessibilityRole="link" onPress={() => Linking.openURL('https://tamer-omar.com')} hitSlop={8}>
-        <Text style={[styles.powered, styles.center]}>
-          Powered by <Text style={styles.poweredName}>Tamer Omar</Text>
-        </Text>
-      </Pressable>
     </View>
   );
 }
@@ -573,6 +530,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.14)',
   },
+  mastBtnSmall: { width: 32, height: 32, borderRadius: 16 },
   mastBtnPressed: { backgroundColor: 'rgba(255,255,255,0.28)' },
 
   // Section title
@@ -619,20 +577,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line,
   },
 
-  // Footer
-  footer: { marginTop: spacing.xl, gap: spacing.ms, alignItems: 'stretch' },
-  whatsapp: {
-    height: 52, borderRadius: radius.md, backgroundColor: colors.whatsapp,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
-  },
-  socialRow: { flexDirection: 'row', gap: spacing.sm },
-  socialBtn: {
-    flex: 1, height: 44, borderRadius: radius.md, backgroundColor: colors.surface,
-    borderWidth: 1, borderColor: colors.line,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-  },
-  powered: { fontFamily: Platform.select({ ios: 'Helvetica Neue', default: 'sans-serif' }), fontSize: 12, color: colors.soft },
-  poweredName: { color: colors.accent, fontWeight: '700' },
 
   // Empty / loading
   empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl * 1.5, paddingHorizontal: SIDE },

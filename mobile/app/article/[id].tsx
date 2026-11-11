@@ -11,6 +11,7 @@ import { formatFullDate } from '@/lib/date';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryChip } from '@/components/CategoryChip';
 import { reportContent } from '@/lib/report';
+import { Footer } from '@/components/Footer';
 import { registerArticleReadAndMaybeAskReview } from '@/lib/reviewPrompt';
 import { DEFAULT_SCALE_INDEX, TEXT_SCALES, getTextScaleIndex, saveTextScaleIndex } from '@/lib/textSize';
 import { colors, fonts, radius, spacing, type } from '@/theme';
@@ -87,6 +88,15 @@ function NativeArticleContent({ html, scale }: { html: string; scale: number }) 
 function ArticleContent({ html, scale }: { html: string; scale: number }) {
   if (Platform.OS === 'web') return <WebArticleContent html={html} scale={scale} />;
   return <NativeArticleContent html={html} scale={scale} />;
+}
+
+// The lead (description) is skipped when the body already contains the same text,
+// which is common: editors often paste the first paragraph into both fields.
+const normalize = (t: string) => t.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/[\s.،,]+/g, ' ').trim();
+function showLead(a: Article): boolean {
+  if (!a.description || a.description === a.title) return false;
+  const lead = normalize(a.description);
+  return lead.length > 0 && !normalize(a.content || '').includes(lead);
 }
 
 // ── A− / A+ in the header ────────────────────────────────────────────────────────
@@ -217,7 +227,7 @@ export default function ArticleScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1, paddingBottom: spacing.xl }} nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }} nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
       {/* Cover */}
       {article.videoUrl ? (
         <View style={{ width: '100%' }}>
@@ -228,39 +238,24 @@ export default function ArticleScreen() {
       ) : null}
 
       <View style={styles.body}>
-        {/* Category + date */}
-        <View style={styles.metaRow}>
-          <CategoryChip name={article.category} style={{ alignSelf: 'auto' }} />
-          <Text style={type.meta}>{formatFullDate(article.createdAt)}</Text>
-        </View>
-
+        {/* Category, title, one meta line */}
+        <CategoryChip name={article.category} />
         <Text style={[type.display, { fontSize: type.display.fontSize * scale, lineHeight: type.display.lineHeight * scale }]}>
           {article.title}
         </Text>
-
-        {/* Author, views */}
-        <View style={styles.byline}>
-          <Text style={[type.meta, { color: colors.ink, fontFamily: fonts.medium }]}>{article.author}</Text>
+        <View style={styles.metaLine}>
+          <Text style={[type.meta, styles.author]}>{article.author}</Text>
+          <Text style={type.meta}>·</Text>
+          <Text style={type.meta}>{formatFullDate(article.createdAt)}</Text>
+          <Text style={type.meta}>·</Text>
           <View style={styles.inline}>
             <Ionicons name="eye-outline" size={13} color={colors.soft} />
             <Text style={type.meta}>{article.views}</Text>
           </View>
         </View>
 
-        {/* Share + report */}
-        <View style={styles.actions}>
-          <Pressable accessibilityRole="button" onPress={handleShare} style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.85 }]}>
-            <Ionicons name="share-social-outline" size={18} color={colors.white} />
-            <Text style={[type.button, { color: colors.white }]}>مشاركة الخبر</Text>
-          </Pressable>
-          <Pressable accessibilityRole="button" onPress={handleReport} style={({ pressed }) => [styles.reportBtn, pressed && { opacity: 0.7 }]}>
-            <Ionicons name="flag-outline" size={16} color={colors.soft} />
-            <Text style={[type.label, { color: colors.soft }]}>إبلاغ</Text>
-          </Pressable>
-        </View>
-
-        {/* Description */}
-        {article.description && article.description !== article.title ? (
+        {/* Lead: only when the body doesn't already start with the same text */}
+        {showLead(article) ? (
           <Text style={[type.body, styles.desc, { fontSize: type.body.fontSize * scale, lineHeight: type.body.lineHeight * scale }]}>
             {article.description}
           </Text>
@@ -281,6 +276,22 @@ export default function ArticleScreen() {
           </View>
         )}
       </View>
+
+      {/* After reading: share / report, then the same footer as the home page */}
+      <View style={styles.bottom}>
+        <Text style={[type.subhead, styles.center]}>أعجبك الخبر؟ شاركه مع أهل البلد</Text>
+        <View style={styles.actions}>
+          <Pressable accessibilityRole="button" onPress={handleShare} style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.85 }]}>
+            <Ionicons name="share-social-outline" size={18} color={colors.white} />
+            <Text style={[type.button, { color: colors.white }]}>مشاركة الخبر</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={handleReport} style={({ pressed }) => [styles.reportBtn, pressed && { opacity: 0.7 }]}>
+            <Ionicons name="flag-outline" size={16} color={colors.soft} />
+            <Text style={[type.label, { color: colors.soft }]}>إبلاغ</Text>
+          </Pressable>
+        </View>
+        <Footer />
+      </View>
     </ScrollView>
   );
 }
@@ -290,10 +301,12 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.lg, backgroundColor: colors.page },
   cover: { width: '100%', height: 260, backgroundColor: colors.page },
   body: { padding: spacing.md, gap: spacing.ms },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  metaLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  author: { color: colors.ink, fontFamily: fonts.medium },
+  center: { textAlign: 'center' },
+  bottom: { backgroundColor: colors.page, paddingTop: spacing.lg, paddingBottom: spacing.xl, gap: spacing.ms, marginTop: spacing.md },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  byline: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md },
   shareBtn: {
     flex: 1, height: 44, borderRadius: radius.md, backgroundColor: colors.masthead,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,

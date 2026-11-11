@@ -11,14 +11,21 @@ import {
   showNotificationPermissionAlert,
 } from '@/lib/notificationPrefs';
 import { CATEGORIES } from '@/lib/categories';
-import { categoryColor, colors, fonts, radius, spacing, type } from '@/theme';
+import { openWhatsApp } from '@/lib/links';
+import { categoryColor, colors, fonts, radius, spacing, themePreference, type, type ThemePreference } from '@/theme';
+import { setThemePreference } from '@/lib/themePreference';
 
 const FRONTEND_URL = __DEV__
   ? (process.env.EXPO_PUBLIC_FRONTEND_URL || 'http://10.0.2.2:3000')
   : 'https://ayam-knawyeh.vercel.app';
-const WHATSAPP_NUMBER = '+972543854441';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
+
+const THEME_OPTIONS: { value: ThemePreference; label: string; icon: IconName }[] = [
+  { value: 'system', label: 'تلقائي', icon: 'phone-portrait-outline' },
+  { value: 'light', label: 'فاتح', icon: 'sunny-outline' },
+  { value: 'dark', label: 'داكن', icon: 'moon-outline' },
+];
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -54,16 +61,6 @@ export default function SettingsScreen() {
     if (value && result === 'no-permission') showNotificationPermissionAlert();
   };
 
-  const openWhatsApp = async () => {
-    const app = `whatsapp://send?phone=${WHATSAPP_NUMBER}`;
-    const web = `https://wa.me/${WHATSAPP_NUMBER.replace('+', '')}`;
-    try {
-      if (await Linking.canOpenURL(app)) await Linking.openURL(app);
-      else await Linking.openURL(web);
-    } catch {
-      Linking.openURL(web);
-    }
-  };
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -112,6 +109,26 @@ export default function SettingsScreen() {
           ))}
         </Section>
       ) : null}
+
+      <Section title="المظهر">
+        <View style={styles.segment}>
+          {THEME_OPTIONS.map((o) => {
+            const active = themePreference === o.value;
+            return (
+              <Pressable
+                key={o.value}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                onPress={() => setThemePreference(o.value)}
+                style={({ pressed }) => [styles.segmentBtn, active && styles.segmentBtnOn, pressed && !active && styles.pressed]}
+              >
+                <Ionicons name={o.icon} size={16} color={active ? colors.white : colors.soft} />
+                <Text style={[styles.segmentTxt, active && { color: colors.white }]}>{o.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Section>
 
       <Section title="تواصل معنا">
         <Pressable onPress={openWhatsApp} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
@@ -188,4 +205,11 @@ const styles = StyleSheet.create({
   rowLabel: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
   label: { fontFamily: fonts.medium, fontSize: 15, color: colors.ink, textAlign: 'right' },
   about: { padding: spacing.md },
+  segment: { flexDirection: 'row', gap: 6, padding: 6 },
+  segmentBtn: {
+    flex: 1, height: 40, borderRadius: radius.md,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+  },
+  segmentBtnOn: { backgroundColor: colors.masthead },
+  segmentTxt: { fontFamily: fonts.semibold, fontSize: 14, color: colors.soft },
 });

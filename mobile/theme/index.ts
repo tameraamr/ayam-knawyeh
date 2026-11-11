@@ -6,6 +6,7 @@
 // (Appearance). Screens use static StyleSheets, so a change of the phone's mode
 // while the app is open applies at the next launch.
 import { Appearance, type TextStyle } from 'react-native';
+import Storage from 'expo-sqlite/kv-store';
 
 const light = {
   // Surfaces
@@ -49,7 +50,28 @@ const dark: typeof light = {
   white: '#ffffff',
 };
 
-export const isDark = Appearance.getColorScheme() === 'dark';
+// The reader's choice (moon/sun button, Settings): 'system' follows the phone.
+// Read synchronously because the palette must be known before any screen's
+// StyleSheet is created. Changing it reloads the app (lib/themePreference.ts).
+export type ThemePreference = 'system' | 'light' | 'dark';
+export const THEME_PREFERENCE_KEY = 'themePreference';
+
+function readThemePreference(): ThemePreference {
+  try {
+    const v = Storage.getItemSync(THEME_PREFERENCE_KEY);
+    return v === 'light' || v === 'dark' ? v : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+export const themePreference = readThemePreference();
+if (themePreference !== 'system') {
+  // Keeps system UI (alerts, keyboard, date pickers) in the same mode as the app.
+  Appearance.setColorScheme(themePreference);
+}
+export const isDark =
+  themePreference === 'system' ? Appearance.getColorScheme() === 'dark' : themePreference === 'dark';
 export const colors = isDark ? dark : light;
 
 // One harmonious family for the categories (replaces Tailwind's rainbow).
