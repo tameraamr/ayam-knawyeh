@@ -6,6 +6,7 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { api, Article } from '@/lib/api';
+import { formatFullDate } from '@/lib/date';
 import { Ionicons } from '@expo/vector-icons';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -195,7 +196,7 @@ export default function ArticleScreen() {
             <Text style={[styles.catText, { color: categoryColor }]}>{article.category}</Text>
           </View>
           <Text style={styles.date}>
-            {new Date(article.createdAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })}
+            {formatFullDate(article.createdAt)}
           </Text>
         </View>
 

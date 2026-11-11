@@ -1,6 +1,13 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image, Switch } from 'react-native';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import {
+  getNotificationsPreference,
+  saveNotificationsPreference,
+  showNotificationPermissionAlert,
+} from '@/lib/notificationPrefs';
 
 const API_BASE = __DEV__
   ? (process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000')
@@ -11,6 +18,24 @@ const FRONTEND_URL = __DEV__
   : 'https://ayam-knawyeh.vercel.app';
 
 export default function SettingsScreen() {
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Read the real preference every time this tab is opened (it can change from the home bell).
+  useFocusEffect(
+    useCallback(() => {
+      getNotificationsPreference().then(setNotificationsEnabled);
+    }, [])
+  );
+
+  const handleToggleNotifications = async (value: boolean) => {
+    setNotificationsEnabled(value);
+    setSaving(true);
+    const result = await saveNotificationsPreference(value);
+    setSaving(false);
+    if (value && result === 'no-permission') showNotificationPermissionAlert();
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* App Header */}
@@ -28,7 +53,20 @@ export default function SettingsScreen() {
         <View style={styles.card}>
           <Row icon="server-outline" label="عنوان الخادم" value={API_BASE} mono />
           <View style={styles.divider} />
-          <Row icon="notifications-outline" label="الإشعارات" value="مفعّل" />
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <Ionicons name={notificationsEnabled ? 'notifications-outline' : 'notifications-off-outline'} size={18} color="#6b7280" />
+              <Text style={styles.rowLabel}>الإشعارات</Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={handleToggleNotifications}
+              disabled={saving}
+              trackColor={{ false: '#374151', true: '#d4af37' }}
+              thumbColor="#f9fafb"
+              ios_backgroundColor="#374151"
+            />
+          </View>
           <View style={styles.divider} />
           <Row icon="globe-outline" label="اللغة" value="العربية" />
         </View>

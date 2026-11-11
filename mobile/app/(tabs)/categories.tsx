@@ -5,6 +5,7 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import { api, Article } from '@/lib/api';
+import { formatRelativeDate } from '@/lib/date';
 import { Ionicons } from '@expo/vector-icons';
 
 const CATEGORIES = [
@@ -90,7 +91,7 @@ export default function CategoriesScreen() {
                 >
                   <Text style={styles.resultTitle} numberOfLines={2}>{item.title}</Text>
                   <Text style={styles.resultDate}>
-                    {new Date(item.createdAt).toLocaleDateString('en-GB')}
+                    {formatRelativeDate(item.createdAt)}
                   </Text>
                 </TouchableOpacity>
               )}

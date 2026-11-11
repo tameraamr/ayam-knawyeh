@@ -6,13 +6,17 @@ import {
   FlatList
 } from 'react-native';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, Article, Ad } from '@/lib/api';
-import { registerForPushNotifications } from '@/lib/notifications';
+import {
+  getNotificationsPreference,
+  saveNotificationsPreference,
+  showNotificationPermissionAlert,
+} from '@/lib/notificationPrefs';
+import { formatRelativeDate } from '@/lib/date';
 
 // Simple fade-in wrapper using built-in Animated
 function FadeIn({ children, delay = 0, style }: { children: React.ReactNode; delay?: number; style?: any }) {
@@ -351,7 +355,7 @@ function FeaturedSlider({ articles }: { articles: Article[] }) {
                         <Text style={styles.metaText}>{item.views}</Text>
                       </View>
                       <Text style={styles.metaDate}>
-                        {new Date(item.createdAt).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
+                        {formatRelativeDate(item.createdAt)}
                       </Text>
                     </View>
                   </View>
@@ -391,7 +395,7 @@ function ArticleRow({ article, index }: { article: Article; index: number }) {
           <View style={styles.articleMeta}>
             <Ionicons name="time-outline" size={11} color={C.textMuted} />
             <Text style={styles.articleMetaText}>
-              {new Date(article.createdAt).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
+              {formatRelativeDate(article.createdAt)}
             </Text>
             <Ionicons name="eye-outline" size={11} color={C.textMuted} style={{ marginStart: 8 }} />
             <Text style={styles.articleMetaText}>{article.views}</Text>
@@ -548,25 +552,22 @@ export default function HomeScreen() {
   const [isSearching, setIsSearching] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
+  // On launch: register this device with the backend if notifications are on.
   useEffect(() => {
     const setupNotifications = async () => {
-      const val = await AsyncStorage.getItem('notificationsEnabled');
-      const isEnabled = val === null || val === 'true';
+      const isEnabled = await getNotificationsPreference();
       setNotificationsEnabled(isEnabled);
-
-      if (isEnabled) {
-        const token = await registerForPushNotifications();
-        if (token) {
-          try {
-            await api.togglePushSubscription(token, true);
-          } catch (e) {
-            console.log('Push subscription sync skipped');
-          }
-        }
-      }
+      if (isEnabled) await saveNotificationsPreference(true);
     };
     setupNotifications();
   }, []);
+
+  // Re-read the preference when coming back to this tab (it may have changed in Settings).
+  useFocusEffect(
+    useCallback(() => {
+      getNotificationsPreference().then(setNotificationsEnabled);
+    }, [])
+  );
 
   const handleToggleNotifications = () => {
     Alert.alert(
@@ -582,18 +583,12 @@ export default function HomeScreen() {
           onPress: async () => {
             const newState = !notificationsEnabled;
             setNotificationsEnabled(newState);
-            await AsyncStorage.setItem('notificationsEnabled', newState.toString());
 
-            const token = await registerForPushNotifications();
-            if (token) {
-              try {
-                await api.togglePushSubscription(token, newState);
-                if (newState) {
-                  Alert.alert('تم التفعيل', 'تم تفعيل الإشعارات بنجاح!');
-                }
-              } catch (e) {
-                console.log('Push subscription sync skipped');
-              }
+            const result = await saveNotificationsPreference(newState);
+            if (newState && result === 'ok') {
+              Alert.alert('تم التفعيل', 'تم تفعيل الإشعارات بنجاح!');
+            } else if (newState && result === 'no-permission') {
+              showNotificationPermissionAlert();
             }
           }
         }
