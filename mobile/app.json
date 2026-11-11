@@ -2,7 +2,7 @@
   "expo": {
     "name": "ايام كناوية",
     "slug": "ayam-knawyeh",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -24,10 +24,6 @@
           "NSAllowsArbitraryLoads": true
         },
         "LSApplicationQueriesSchemes": [
-          "fb",
-          "instagram",
-          "tiktok",
-          "whatsapp",
           "fb",
           "instagram",
           "tiktok",
@@ -71,6 +67,12 @@
       "eas": {
         "projectId": "7fd46ac6-5e64-4e37-8c7d-fa57874c90b0"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7fd46ac6-5e64-4e37-8c7d-fa57874c90b0"
     }
   }
 }
