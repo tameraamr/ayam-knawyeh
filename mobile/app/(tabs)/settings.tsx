@@ -83,7 +83,7 @@ export default function SettingsScreen() {
             value={notificationsEnabled}
             onValueChange={handleToggleNotifications}
             disabled={saving}
-            trackColor={{ false: colors.line, true: colors.masthead }}
+            trackColor={{ false: colors.line, true: colors.accent }}
             ios_backgroundColor={colors.line}
           />
         </View>
@@ -103,7 +103,7 @@ export default function SettingsScreen() {
                   value={categories.includes(cat.name)}
                   onValueChange={(on) => toggleCategory(cat.name, on)}
                   disabled={saving}
-                  trackColor={{ false: colors.line, true: colors.masthead }}
+                  trackColor={{ false: colors.line, true: colors.accent }}
                   ios_backgroundColor={colors.line}
                   accessibilityLabel={`إشعارات ${cat.name}`}
                 />
@@ -158,7 +158,7 @@ function Divider() {
 function RowLabel({ icon, label }: { icon: IconName; label: string }) {
   return (
     <View style={styles.rowLabel}>
-      <Ionicons name={icon} size={19} color={colors.masthead} />
+      <Ionicons name={icon} size={19} color={colors.accent} />
       <Text style={styles.label}>{label}</Text>
     </View>
   );

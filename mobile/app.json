@@ -5,7 +5,7 @@
     "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "scheme": "ayamknawyeh",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -57,7 +57,8 @@
         }
       ],
       "expo-font",
-      "expo-video"
+      "expo-video",
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true

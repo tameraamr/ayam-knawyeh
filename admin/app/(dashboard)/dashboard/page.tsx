@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { apiClient } from '@/lib/api';
 import { Stats } from '@/lib/types';
-import { Newspaper, Megaphone, Eye, TrendingUp, Plus } from 'lucide-react';
+import { Newspaper, Megaphone, Eye, TrendingUp, Plus, Flag } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -65,6 +65,16 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold text-white">لوحة التحكم</h1>
         <p className="text-gray-400 mt-1">مرحباً بك في نظام إدارة أخبار ايام كناوية</p>
       </div>
+
+      {/* Open reports from readers */}
+      {!!stats?.openReports && (
+        <Link href="/reports" className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 hover:border-red-500/60 rounded-2xl p-4 transition-colors">
+          <Flag className="w-5 h-5 text-red-400 flex-shrink-0" />
+          <span className="text-red-200">
+            لديك <b>{stats.openReports}</b> {stats.openReports === 1 ? 'بلاغ جديد' : 'بلاغات جديدة'} من القرّاء بانتظار المراجعة
+          </span>
+        </Link>
+      )}
 
       {/* Stats Grid */}
       {loading ? (

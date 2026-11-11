@@ -146,6 +146,17 @@ export const api = {
     }
   },
 
+  /** Sends a reader's report about an article or ad to the editors. Throws on failure. */
+  report: async (targetType: 'article' | 'ad', targetId: string, reason: string): Promise<void> => {
+    const deviceId = await getDeviceId();
+    const res = await fetch(`${API_BASE}/api/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetType, targetId, reason, deviceId }),
+    });
+    if (!res.ok) throw new Error('report failed');
+  },
+
   /** `categories`: the categories to be notified about; [] means all of them. */
   togglePushSubscription: async (token: string, subscribe: boolean, categories?: string[]) => {
     const endpoint = subscribe ? 'subscribe' : 'unsubscribe';

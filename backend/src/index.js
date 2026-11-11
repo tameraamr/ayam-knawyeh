@@ -11,10 +11,15 @@ const articleRoutes = require('./routes/articles');
 const adRoutes = require('./routes/ads');
 const uploadRoutes = require('./routes/upload');
 const notificationRoutes = require('./routes/notifications');
+const reportRoutes = require('./routes/reports');
 const { seedAdmin } = require('./utils/seed');
+const { apiLimiter, loginLimiter, appWriteLimiter } = require('./middleware/rateLimits');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Railway runs behind one proxy: trust it so rate limits see the real client IP.
+app.set('trust proxy', 1);
 
 // Security & middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
@@ -34,7 +39,13 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.get('/', (req, res) => res.status(200).json({ status: 'ok', message: 'API is running' }));
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
+// Rate limits (see middleware/rateLimits.js)
+app.use('/api', apiLimiter);
+app.use('/api/auth/login', loginLimiter);
+app.use(['/api/notifications/subscribe', '/api/notifications/unsubscribe', '/api/articles/:id/view'], appWriteLimiter);
+
 // Routes
+app.use('/api/reports', reportRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/ads', adRoutes);

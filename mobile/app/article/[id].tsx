@@ -10,6 +10,8 @@ import { api, Article } from '@/lib/api';
 import { formatFullDate } from '@/lib/date';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryChip } from '@/components/CategoryChip';
+import { reportContent } from '@/lib/report';
+import { registerArticleReadAndMaybeAskReview } from '@/lib/reviewPrompt';
 import { DEFAULT_SCALE_INDEX, TEXT_SCALES, getTextScaleIndex, saveTextScaleIndex } from '@/lib/textSize';
 import { colors, fonts, radius, spacing, type } from '@/theme';
 
@@ -28,7 +30,7 @@ const articleStyle = (scale: number) => `
     h1,h2,h3 { color: ${colors.ink}; margin: 18px 0 10px; line-height: 1.45; font-weight: 700; }
     h1 { font-size: 1.3em; } h2 { font-size: 1.12em; } h3 { font-size: 1em; }
     img { max-width: 100%; border-radius: 10px; margin: 10px 0; display: block; }
-    a { color: ${colors.masthead}; }
+    a { color: ${colors.accent}; }
     blockquote { border-right: 4px solid ${colors.goldRule}; padding: 4px 12px 4px 0; color: ${colors.soft}; margin: 14px 0; }
     ul,ol { padding-right: 22px; margin-bottom: 14px; } li { margin-bottom: 6px; }
     strong { font-weight: 700; }
@@ -171,6 +173,7 @@ export default function ArticleScreen() {
         setArticle(data.article);
         navigation.setOptions({ title: '' });
         api.recordView(id); // once per phone; fire and forget
+        registerArticleReadAndMaybeAskReview();
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -192,30 +195,13 @@ export default function ArticleScreen() {
   };
 
   const handleReport = () => {
-    if (Platform.OS === 'web') {
-      alert("تم الإبلاغ. شكراً لك. سيقوم فريقنا بمراجعة هذا المحتوى قريباً.");
-      return;
-    }
-    Alert.alert(
-      "إبلاغ عن محتوى",
-      "هل أنت متأكد أنك تريد الإبلاغ عن هذا الخبر كمحتوى مسيء أو غير لائق؟",
-      [
-        { text: "إلغاء", style: "cancel" },
-        { 
-          text: "إبلاغ", 
-          style: "destructive",
-          onPress: () => {
-            Alert.alert("تم الإبلاغ", "شكراً لك. سيقوم فريقنا بمراجعة هذا المحتوى قريباً.");
-          }
-        }
-      ]
-    );
+    if (article) reportContent('article', article._id);
   };
 
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.masthead} />
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }

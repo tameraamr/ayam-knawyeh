@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import {
   LayoutDashboard, Newspaper, Megaphone, Bell,
-  LogOut, Menu, X, ChevronLeft
+  LogOut, Menu, X, ChevronLeft, Flag
 } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/articles', label: 'الأخبار', icon: Newspaper },
   { href: '/ads', label: 'الإعلانات', icon: Megaphone },
   { href: '/notifications', label: 'الإشعارات', icon: Bell },
+  { href: '/reports', label: 'البلاغات', icon: Flag },
 ];
 
 export default function Sidebar() {

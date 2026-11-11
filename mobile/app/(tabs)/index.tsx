@@ -21,6 +21,7 @@ import { formatRelativeDate, formatArabicDate } from '@/lib/date';
 import { colors, fonts, radius, spacing, type } from '@/theme';
 import { ArticleRow } from '@/components/ArticleRow';
 import { CategoryChip } from '@/components/CategoryChip';
+import { PrayerBar } from '@/components/PrayerBar';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const IS_WEB = Platform.OS === 'web';
@@ -29,6 +30,8 @@ const CARD_WIDTH = SCREEN_WIDTH - SIDE * 2;
 const MEDIA_HEIGHT = IS_WEB ? 220 : Math.round(SCREEN_HEIGHT * 0.27);
 const CAROUSEL_COUNT = 5;
 const WHATSAPP_NUMBER = '+972543854441';
+// The "إعلان" label sits on a white pill over the photo in both themes, so its text stays dark.
+const AD_LABEL_INK = '#1f1819';
 
 // ─── Masthead: crimson band with the gold logo, like the front page of a paper ──
 function Masthead({
@@ -80,6 +83,9 @@ function Masthead({
           </Pressable>
         </View>
       </View>
+
+      {/* Next prayer; tap for today's timetable */}
+      <PrayerBar />
     </View>
   );
 }
@@ -144,8 +150,8 @@ function PinnedAdCard({ ad }: { ad: Ad }) {
           </View>
         )}
         <View style={styles.adLabel}>
-          <Ionicons name="megaphone" size={11} color={colors.ink} />
-          <Text style={[type.label, { color: colors.ink }]}>إعلان</Text>
+          <Ionicons name="megaphone" size={11} color={AD_LABEL_INK} />
+          <Text style={[type.label, { color: AD_LABEL_INK }]}>إعلان</Text>
         </View>
         {ad.videoUrl ? <VideoBadge /> : null}
         {ad.title ? (
@@ -283,7 +289,7 @@ function Footer() {
             onPress={() => openSocial(s.app, s.web)}
             style={({ pressed }) => [styles.socialBtn, pressed && styles.cardPressed]}
           >
-            <FontAwesome5 name={s.icon as any} size={15} color={colors.masthead} />
+            <FontAwesome5 name={s.icon as any} size={15} color={colors.accent} />
             <Text style={[type.label, { color: colors.ink }]}>{s.label}</Text>
           </Pressable>
         ))}
@@ -460,7 +466,7 @@ export default function HomeScreen() {
 
           <ScrollView style={styles.screen} contentContainerStyle={{ padding: SIDE }} keyboardShouldPersistTaps="handled">
             {isSearching ? (
-              <ActivityIndicator size="large" color={colors.masthead} style={{ marginTop: 40 }} />
+              <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 40 }} />
             ) : searchResults.length > 0 ? (
               <View style={styles.list}>
                 {searchResults.map((a, i) => <ArticleRow key={a._id} article={a} first={i === 0} />)}
@@ -482,7 +488,7 @@ export default function HomeScreen() {
         style={styles.screen}
         contentContainerStyle={{ paddingBottom: spacing.lg }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.masthead} colors={[colors.masthead]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.accent} colors={[colors.accent]} />}
       >
         <Masthead
           onSearchPress={() => setSearchVisible(true)}
@@ -516,11 +522,11 @@ export default function HomeScreen() {
                     style={({ pressed }) => [styles.moreBtn, pressed && styles.cardPressed]}
                   >
                     {loadingMore ? (
-                      <ActivityIndicator color={colors.masthead} />
+                      <ActivityIndicator color={colors.accent} />
                     ) : (
                       <>
-                        <Text style={[type.button, { color: colors.masthead }]}>عرض المزيد من الأخبار</Text>
-                        <Ionicons name="chevron-down" size={16} color={colors.masthead} />
+                        <Text style={[type.button, { color: colors.accent }]}>عرض المزيد من الأخبار</Text>
+                        <Ionicons name="chevron-down" size={16} color={colors.accent} />
                       </>
                     )}
                   </Pressable>
@@ -607,7 +613,7 @@ const styles = StyleSheet.create({
   // Carousel dots
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: spacing.ms },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.line },
-  dotActive: { width: 18, backgroundColor: colors.masthead },
+  dotActive: { width: 18, backgroundColor: colors.accent },
 
   // News list
   list: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.surface },
@@ -630,7 +636,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
   },
   powered: { fontFamily: Platform.select({ ios: 'Helvetica Neue', default: 'sans-serif' }), fontSize: 12, color: colors.soft },
-  poweredName: { color: colors.masthead, fontWeight: '700' },
+  poweredName: { color: colors.accent, fontWeight: '700' },
 
   // Empty / loading
   empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl * 1.5, paddingHorizontal: SIDE },

@@ -1,9 +1,13 @@
 // ─── ايام كناوية — design tokens ("Pietra di Galilea" / حجر الجليل) ───────────
 // One source of truth for every screen. Never hardcode colours, font sizes or
 // spacing in a screen: add the value here and import it.
-import type { TextStyle } from 'react-native';
+//
+// Light and dark: the palette is picked ONCE at startup from the phone's setting
+// (Appearance). Screens use static StyleSheets, so a change of the phone's mode
+// while the app is open applies at the next launch.
+import { Appearance, type TextStyle } from 'react-native';
 
-export const colors = {
+const light = {
   // Surfaces
   page: '#efede8',        // limestone page behind everything
   surface: '#ffffff',     // cards, lists, tab bar
@@ -13,28 +17,64 @@ export const colors = {
   soft: '#6c625e',        // secondary text, meta
   faint: '#9a908b',       // placeholders, disabled
   // Brand
-  masthead: '#8c1222',    // crimson band behind the logo, headers
+  masthead: '#8c1222',    // crimson band behind the logo, headers, primary buttons
   onMasthead: '#fbf3e4',  // text/icons on the masthead
   onMastheadSoft: '#e9c9b8',
   goldRule: '#c9a24a',    // thin gold line under the masthead
-  gold: '#a8822a',        // brand gold on light surfaces (active states)
+  gold: '#a8822a',        // brand gold on surfaces
+  accent: '#8c1222',      // active tab, links, switches, spinners on surfaces
   // Meaning
   urgent: '#a3162a',      // "عاجل" and destructive actions only
   whatsapp: '#1f8f4e',
   overlay: 'rgba(20, 8, 10, 0.78)', // text-on-photo scrim
   white: '#ffffff',
-} as const;
-
-// One harmonious family for the 7 categories (replaces Tailwind's rainbow).
-export const categoryColors: Record<string, string> = {
-  'اخبار البلد': '#a3162a',
-  'تنويهات': '#2d5f7a',
-  'ابناء كفركنا': '#8a6a1c',
-  'افراح': '#b4561d',
-  'مواليد جدد': '#a8456a',
-  'يصادف اليوم': '#4d6b2f',
-  'محلات تجارية': '#6a4a86',
 };
+
+const dark: typeof light = {
+  page: '#141112',
+  surface: '#1e1a1b',
+  line: '#322b2c',
+  ink: '#f0eae6',
+  soft: '#a9a09c',
+  faint: '#6f6764',
+  masthead: '#6a0f1a',    // deeper crimson so the band doesn't glare at night
+  onMasthead: '#fbf3e4',
+  onMastheadSoft: '#dcbcab',
+  goldRule: '#b8923f',
+  gold: '#d4af37',
+  accent: '#e2b54c',      // gold reads better than crimson on dark surfaces
+  urgent: '#e0566a',
+  whatsapp: '#1f8f4e',
+  overlay: 'rgba(8, 4, 5, 0.82)',
+  white: '#ffffff',
+};
+
+export const isDark = Appearance.getColorScheme() === 'dark';
+export const colors = isDark ? dark : light;
+
+// One harmonious family for the categories (replaces Tailwind's rainbow).
+// Dark variants are lighter so chip text stays readable on dark surfaces.
+export const categoryColors: Record<string, string> = isDark
+  ? {
+      'اخبار البلد': '#ef6b7c',
+      'وفيات': '#9aa3ad',
+      'تنويهات': '#6fa8c9',
+      'ابناء كفركنا': '#d4af37',
+      'افراح': '#e58a52',
+      'مواليد جدد': '#e08aa8',
+      'يصادف اليوم': '#9cbf6e',
+      'محلات تجارية': '#b393d6',
+    }
+  : {
+      'اخبار البلد': '#a3162a',
+      'وفيات': '#4a5058',       // sober slate for obituaries
+      'تنويهات': '#2d5f7a',
+      'ابناء كفركنا': '#8a6a1c',
+      'افراح': '#b4561d',
+      'مواليد جدد': '#a8456a',
+      'يصادف اليوم': '#4d6b2f',
+      'محلات تجارية': '#6a4a86',
+    };
 export const categoryColor = (name?: string) => (name && categoryColors[name]) || colors.soft;
 
 /** Tinted background for a category chip (hex + alpha). */

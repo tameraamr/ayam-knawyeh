@@ -5,6 +5,7 @@ const PushToken = require('../models/PushToken');
 const { getActiveTokens } = require('../services/subscribers');
 const Article = require('../models/Article');
 const Ad = require('../models/Ad');
+const Report = require('../models/Report');
 
 const router = express.Router();
 
@@ -44,13 +45,14 @@ router.post('/send', authMiddleware, async (req, res) => {
 // GET /api/notifications/stats — dashboard stats (admin)
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
-    const [totalArticles, publishedArticles, totalAds, activeAds, totalViews, subscriberCount] = await Promise.all([
+    const [totalArticles, publishedArticles, totalAds, activeAds, totalViews, subscriberCount, openReports] = await Promise.all([
       Article.countDocuments(),
       Article.countDocuments({ isPublished: true }),
       Ad.countDocuments(),
       Ad.countDocuments({ isActive: true }),
       Article.aggregate([{ $group: { _id: null, total: { $sum: '$views' } } }]),
       PushToken.countDocuments({ active: true }),
+      Report.countDocuments({ status: 'open' }),
     ]);
 
     res.json({
@@ -58,6 +60,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
       ads: { total: totalAds, active: activeAds },
       totalViews: totalViews[0]?.total || 0,
       subscribers: subscriberCount,
+      openReports,
     });
   } catch (err) {
     res.status(500).json({ error: 'خطأ في جلب الإحصائيات' });

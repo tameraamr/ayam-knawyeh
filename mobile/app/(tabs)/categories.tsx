@@ -81,7 +81,7 @@ export default function CategoriesScreen() {
       )}
       ListEmptyComponent={
         loading ? (
-          <ActivityIndicator size="large" color={colors.masthead} style={{ marginTop: spacing.xl }} />
+          <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: spacing.xl }} />
         ) : !selected ? (
           <View style={styles.hint}>
             <Ionicons name="grid-outline" size={40} color={colors.faint} />
@@ -92,7 +92,7 @@ export default function CategoriesScreen() {
             <Ionicons name="cloud-offline-outline" size={40} color={colors.faint} />
             <Text style={[type.title, styles.center]}>تعذّر تحميل الأخبار</Text>
             <Pressable onPress={() => fetchByCategory(selected)} hitSlop={8}>
-              <Text style={[type.button, { color: colors.masthead }]}>إعادة المحاولة</Text>
+              <Text style={[type.button, { color: colors.accent }]}>إعادة المحاولة</Text>
             </Pressable>
           </View>
         ) : (

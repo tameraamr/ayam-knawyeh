@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const CATEGORIES = ['اخبار البلد', 'مواليد جدد', 'ابناء كفركنا', 'افراح', 'يصادف اليوم', 'محلات تجارية', 'تنويهات'];
+const CATEGORIES = ['اخبار البلد', 'وفيات', 'مواليد جدد', 'ابناء كفركنا', 'افراح', 'يصادف اليوم', 'محلات تجارية', 'تنويهات'];
 
 const articleSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },

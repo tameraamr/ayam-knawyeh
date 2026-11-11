@@ -9,6 +9,7 @@ import { Plus, Pencil, Trash2, Eye, Search, CheckCircle, XCircle } from 'lucide-
 
 const CATEGORY_COLORS: Record<string, string> = {
   'اخبار البلد': 'bg-emerald-500/10 text-emerald-400',
+  'وفيات': 'bg-slate-500/15 text-slate-300',
   'مواليد جدد': 'bg-blue-500/10 text-blue-400',
   'ابناء كفركنا': 'bg-purple-500/10 text-purple-400',
   'افراح': 'bg-orange-500/10 text-orange-400',

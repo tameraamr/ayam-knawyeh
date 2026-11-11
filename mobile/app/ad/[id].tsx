@@ -10,6 +10,7 @@ import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { api, Ad } from '@/lib/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts } from '@/theme';
+import { reportContent } from '@/lib/report';
 
 function FadeDown({ children, delay = 0, style }: { children: React.ReactNode; delay?: number; style?: any }) {
     const anim = useRef(new Animated.Value(0)).current;
@@ -41,11 +42,11 @@ const CONTENT_CSS = `
     font-family: 'IBM Plex Sans Arabic', -apple-system, 'Segoe UI', sans-serif; direction: rtl; }
   p { color: ${colors.ink}; font-size: 16px; line-height: 1.9; margin: 0 0 14px; text-align: right; }
   h1,h2,h3 { color: ${colors.ink}; text-align: right; margin: 18px 0 10px; }
-  h2 { font-size: 19px; border-right: 4px solid ${colors.masthead}; padding-right: 10px; }
-  h3 { font-size: 17px; color: ${colors.masthead}; }
+  h2 { font-size: 19px; border-right: 4px solid ${colors.accent}; padding-right: 10px; }
+  h3 { font-size: 17px; color: ${colors.accent}; }
   img { max-width: 100%; border-radius: 12px; margin: 12px 0; display: block; }
   video { max-width: 100%; border-radius: 12px; margin: 12px 0; }
-  a { color: ${colors.masthead}; }
+  a { color: ${colors.accent}; }
   ul, ol { color: ${colors.ink}; text-align: right; padding-right: 20px; line-height: 1.9; }
   blockquote { border-right: 3px solid ${colors.goldRule}; margin: 14px 0; padding: 8px 14px;
     background: ${colors.page}; border-radius: 0 8px 8px 0; color: ${colors.soft}; }
@@ -148,24 +149,7 @@ export default function AdDetailScreen() {
     }, [id]);
 
     const handleReport = () => {
-        if (Platform.OS === 'web') {
-            alert("تم الإبلاغ. شكراً لك. سيقوم فريقنا بمراجعة هذا المحتوى قريباً.");
-            return;
-        }
-        Alert.alert(
-            "إبلاغ عن محتوى",
-            "هل أنت متأكد أنك تريد الإبلاغ عن هذا الإعلان كمحتوى مسيء أو غير لائق؟",
-            [
-                { text: "إلغاء", style: "cancel" },
-                { 
-                    text: "إبلاغ", 
-                    style: "destructive",
-                    onPress: () => {
-                        Alert.alert("تم الإبلاغ", "شكراً لك. سيقوم فريقنا بمراجعة هذا المحتوى قريباً.");
-                    }
-                }
-            ]
-        );
+        if (ad) reportContent('ad', ad._id);
     };
 
     if (loading) {

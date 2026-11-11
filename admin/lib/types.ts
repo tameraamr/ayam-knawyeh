@@ -36,6 +36,17 @@ export interface Stats {
   articles: { total: number; published: number };
   ads: { total: number; active: number };
   totalViews: number;
+  subscribers?: number;
+  openReports?: number;
 }
 
-export const CATEGORIES = ['اخبار البلد', 'مواليد جدد', 'ابناء كفركنا', 'افراح', 'يصادف اليوم', 'محلات تجارية', 'تنويهات'];
+export interface ReportGroup {
+  targetType: 'article' | 'ad';
+  targetId: string;
+  targetTitle: string;
+  count: number;
+  reasons: string[];
+  lastAt: string;
+}
+
+export const CATEGORIES = ['اخبار البلد', 'وفيات', 'مواليد جدد', 'ابناء كفركنا', 'افراح', 'يصادف اليوم', 'محلات تجارية', 'تنويهات'];

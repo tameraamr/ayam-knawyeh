@@ -18,7 +18,7 @@ export default function TabLayout() {
       screenOptions={{
         // Labels under the icons: easier for everyone, especially older readers.
         tabBarShowLabel: true,
-        tabBarActiveTintColor: colors.masthead,
+        tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.soft,
         tabBarLabelStyle: { fontFamily: fonts.semibold, fontSize: 11.5, marginTop: 2 },
         tabBarStyle: {
