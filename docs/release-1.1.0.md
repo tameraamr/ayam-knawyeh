@@ -18,6 +18,23 @@ Ordine consigliato: 01_home → 02_categories → 03_article → 04_settings.
 • تحسينات في السرعة والثبات
 ```
 
+English (U.S.) — required too, the App Store listing has an English localization:
+
+```
+• A completely new design in Ayam Knawyeh colors, with dark mode
+• Choose which categories you get notifications for, plus a new Obituaries category
+• Tapping a notification or a shared link now opens the news directly
+• Adjustable text size for articles
+• The Report button now goes straight to the editorial team
+• Faster and more stable
+```
+
+## Apple — Classificazione per età
+Apple ha aggiornato il questionario (2025): Informazioni sull'app → Classificazione per età → Modifica.
+Risposte tipiche per questa app: violenza realistica rara/lieve (cronaca); niente temi per adulti,
+contenuti medici, web senza restrizioni, contenuti generati dagli utenti o chat; pubblicità sì;
+nessun controllo parentale. Risultato probabile 12+.
+
 ## Apple — App Privacy (App Store Connect → App → Privacy)
 Rispondi **Sì, raccogliamo dati**, poi:
 
