@@ -1,7 +1,7 @@
 import {
   View, Text, ScrollView, StyleSheet, Pressable, Image,
-  Dimensions, ActivityIndicator, RefreshControl, Platform,
-  Animated, Alert, TextInput, Modal, KeyboardAvoidingView, FlatList, I18nManager,
+  ActivityIndicator, RefreshControl, Platform,
+  Animated, Alert, TextInput, Modal, KeyboardAvoidingView, FlatList, I18nManager, useWindowDimensions,
   type NativeSyntheticEvent, type NativeScrollEvent, type StyleProp, type ViewStyle,
 } from 'react-native';
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -24,12 +24,17 @@ import { ArticleRow } from '@/components/ArticleRow';
 import { CategoryChip } from '@/components/CategoryChip';
 import { Footer } from '@/components/Footer';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 const IS_WEB = Platform.OS === 'web';
 const IS_RTL = I18nManager.isRTL;
 const SIDE = spacing.md;                       // screen edge padding
-const CARD_WIDTH = SCREEN_WIDTH - SIDE * 2;
-const MEDIA_HEIGHT = IS_WEB ? 220 : Math.round(SCREEN_HEIGHT * 0.27);
+
+// Sizes follow the current window (tablets/foldables can rotate on Android 16
+// even though the app is locked to portrait), so never read them once at startup.
+function useMediaHeight() {
+  const { width, height } = useWindowDimensions();
+  return IS_WEB ? 220 : Math.round(Math.min(width * 0.6, height * 0.4));
+}
 const CAROUSEL_COUNT = 5;
 // The "إعلان" label sits on a white pill over the photo in both themes, so its text stays dark.
 const AD_LABEL_INK = '#1f1819';
@@ -139,6 +144,7 @@ function VideoBadge({ style }: { style?: StyleProp<ViewStyle> }) {
 // ─── ① Pinned ad: always first on the page ────────────────────────────────────
 function PinnedAdCard({ ad }: { ad: Ad }) {
   const router = useRouter();
+  const mediaHeight = useMediaHeight();
   return (
     <View style={[styles.block, styles.padded]}>
       <Pressable
@@ -148,11 +154,11 @@ function PinnedAdCard({ ad }: { ad: Ad }) {
         style={({ pressed }) => [styles.mediaCard, pressed && styles.cardPressed]}
       >
         {ad.videoUrl ? (
-          <VideoPreview uri={ad.videoUrl} height={MEDIA_HEIGHT} />
+          <VideoPreview uri={ad.videoUrl} height={mediaHeight} />
         ) : ad.imageUrl ? (
-          <Image source={{ uri: ad.imageUrl }} style={styles.media} resizeMode="cover" />
+          <Image source={{ uri: ad.imageUrl }} style={[styles.media, { height: mediaHeight }]} resizeMode="cover" />
         ) : (
-          <View style={[styles.media, styles.mediaEmpty]}>
+          <View style={[styles.media, styles.mediaEmpty, { height: mediaHeight }]}>
             <Ionicons name="megaphone-outline" size={40} color={colors.faint} />
           </View>
         )}
@@ -175,6 +181,8 @@ function PinnedAdCard({ ad }: { ad: Ad }) {
 // ─── ② Carousel: the 5 latest news, auto-advancing ─────────────────────────────
 function FeaturedCarousel({ articles }: { articles: Article[] }) {
   const router = useRouter();
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
+  const mediaHeight = useMediaHeight();
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef<FlatList<Article>>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -235,9 +243,9 @@ function FeaturedCarousel({ articles }: { articles: Article[] }) {
               style={({ pressed }) => [styles.mediaCard, pressed && styles.cardPressed]}
             >
               {item.imageUrl ? (
-                <Image source={{ uri: item.imageUrl }} style={styles.media} resizeMode="cover" />
+                <Image source={{ uri: item.imageUrl }} style={[styles.media, { height: mediaHeight }]} resizeMode="cover" />
               ) : (
-                <View style={[styles.media, styles.mediaEmpty]}>
+                <View style={[styles.media, styles.mediaEmpty, { height: mediaHeight }]}>
                   <Ionicons name="newspaper-outline" size={40} color={colors.faint} />
                 </View>
               )}
@@ -268,6 +276,7 @@ function FeaturedCarousel({ articles }: { articles: Article[] }) {
 
 // ─── Loading placeholder that keeps the page's shape ──────────────────────────
 function Skeleton() {
+  const mediaHeight = useMediaHeight();
   const opacity = useRef(new Animated.Value(0.5)).current;
   useEffect(() => {
     const loop = Animated.loop(Animated.sequence([
@@ -280,8 +289,8 @@ function Skeleton() {
   const box = (h: number) => <Animated.View style={[styles.skeleton, { height: h, opacity }]} />;
   return (
     <View style={[styles.padded, { gap: spacing.md, paddingTop: spacing.md }]}>
-      {box(MEDIA_HEIGHT)}
-      {box(MEDIA_HEIGHT)}
+      {box(mediaHeight)}
+      {box(mediaHeight)}
       {box(84)}
       {box(84)}
     </View>
@@ -402,7 +411,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.screen}>
-      <StatusBar style="light" backgroundColor={colors.masthead} />
+      <StatusBar style="light" />
 
       {/* Search */}
       <Modal visible={searchVisible} animationType="slide" onRequestClose={() => setSearchVisible(false)}>
@@ -547,7 +556,7 @@ const styles = StyleSheet.create({
 
   // Photo cards (ad + carousel)
   mediaCard: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.surface, marginHorizontal: 0 },
-  media: { width: '100%', height: MEDIA_HEIGHT },
+  media: { width: '100%' }, // height comes from useMediaHeight()
   mediaEmpty: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.line },
   cardPressed: { opacity: 0.88 },
   scrim: {

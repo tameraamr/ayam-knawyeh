@@ -1,6 +1,6 @@
 import {
     View, Text, StyleSheet, ScrollView, TouchableOpacity,
-    Image, Dimensions, ActivityIndicator, Linking, Platform, Animated, Alert
+    Image, useWindowDimensions, ActivityIndicator, Linking, Platform, Animated, Alert
 } from 'react-native';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState, useRef } from 'react';
@@ -24,7 +24,6 @@ function FadeDown({ children, delay = 0, style }: { children: React.ReactNode; d
     );
 }
 
-const { width: W, height: H } = Dimensions.get('window');
 const IS_WEB = Platform.OS === 'web';
 
 // Local aliases onto the shared theme (keeps this screen's styles readable).
@@ -117,6 +116,7 @@ function VideoPlayer({ uri }: { uri: string }) {
 
 function NativeVideoPlayer({ uri }: { uri: string }) {
     const player = useVideoPlayer(uri);
+    const { width: W, height: H } = useWindowDimensions(); // live size (rotation on tablets)
     return (
         <VideoView
             player={player}
@@ -132,6 +132,7 @@ function NativeVideoPlayer({ uri }: { uri: string }) {
 export default function AdDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const insets = useSafeAreaInsets();
+    const { height: windowHeight } = useWindowDimensions();
     const navigation = useNavigation();
     const router = useRouter();
     const [ad, setAd] = useState<Ad | null>(null);
@@ -201,7 +202,7 @@ export default function AdDetailScreen() {
                     </View>
                 ) : ad.imageUrl ? (
                     <View style={styles.heroWrap}>
-                        <Image source={{ uri: ad.imageUrl }} style={styles.heroImage} resizeMode="cover" />
+                        <Image source={{ uri: ad.imageUrl }} style={[styles.heroImage, { height: IS_WEB ? 280 : Math.round(windowHeight * 0.4) }]} resizeMode="cover" />
                     </View>
                 ) : null}
 
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
 
     videoWrap: { width: '100%', backgroundColor: '#000', borderRadius: IS_WEB ? 0 : 0 },
     heroWrap: { position: 'relative' },
-    heroImage: { width: '100%', height: IS_WEB ? 280 : H * 0.4 },
+    heroImage: { width: '100%' }, // height set inline from the window size
     heroOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%' },
 
     floatingBack: { position: 'absolute', top: IS_WEB ? 14 : 50, start: 16, zIndex: 50 }, // start = right in RTL

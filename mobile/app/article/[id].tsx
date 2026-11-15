@@ -1,6 +1,6 @@
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
-  ActivityIndicator, Share, Image, Platform, Dimensions, Alert,
+  ActivityIndicator, Share, Image, Platform, useWindowDimensions, Alert,
 } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -144,7 +144,7 @@ function VideoPlayer({ uri }: { uri: string }) {
 // Tap to play, with the system controls (fullscreen, seek) — no autoplay.
 function NativeVideoPlayer({ uri }: { uri: string }) {
   const player = useVideoPlayer(uri);
-  const { width: W } = Dimensions.get('window');
+  const { width: W } = useWindowDimensions();
   return (
     <VideoView
       player={player}

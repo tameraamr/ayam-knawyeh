@@ -106,7 +106,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         {/* Every screen opens with the crimson masthead, so light status-bar text everywhere */}
-        <StatusBar style="light" backgroundColor={colors.masthead} />
+        <StatusBar style="light" />
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: colors.masthead },
